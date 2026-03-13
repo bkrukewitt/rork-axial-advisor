@@ -2,7 +2,7 @@ import Foundation
 
 struct AIService {
     static func getExpertResponse(messages: [ChatMessage]) async -> String {
-        let toolkitURL = Config.TOOLKIT_URL
+        let toolkitURL = Config.EXPO_PUBLIC_TOOLKIT_URL
         guard !toolkitURL.isEmpty,
               let url = URL(string: "\(toolkitURL)/agent/chat") else {
             return fallbackResponse(for: messages.last?.content ?? "")

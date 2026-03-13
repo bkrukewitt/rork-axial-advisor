@@ -11,8 +11,8 @@ class SupabaseService {
     private let supabaseKey: String
 
     private init() {
-        self.supabaseURL = Config.SUPABASE_URL
-        self.supabaseKey = Config.SUPABASE_ANON_KEY
+        self.supabaseURL = Config.EXPO_PUBLIC_SUPABASE_URL
+        self.supabaseKey = Config.EXPO_PUBLIC_SUPABASE_ANON_KEY
         loadCachedData()
     }
 
