@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 
-struct SavedSetupsView: View {
+struct LogsView: View {
     @Query(sort: \SavedSetup.dateCreated, order: .reverse) private var setups: [SavedSetup]
     @Environment(\.modelContext) private var modelContext
     @State private var selectedSetup: SavedSetup?
@@ -12,8 +12,8 @@ struct SavedSetupsView: View {
                 if setups.isEmpty {
                     ContentUnavailableView(
                         "No Saved Setups",
-                        systemImage: "folder",
-                        description: Text("Run the setup wizard and save your settings to see them here.")
+                        systemImage: "tray",
+                        description: Text("Generate settings and save them to see your history here.")
                     )
                 } else {
                     List {
@@ -21,7 +21,7 @@ struct SavedSetupsView: View {
                             Button {
                                 selectedSetup = setup
                             } label: {
-                                SavedSetupRow(setup: setup)
+                                LogRow(setup: setup)
                             }
                             .buttonStyle(.plain)
                         }
@@ -30,9 +30,9 @@ struct SavedSetupsView: View {
                     .listStyle(.insetGrouped)
                 }
             }
-            .navigationTitle("Saved Setups")
+            .navigationTitle("Logs")
             .sheet(item: $selectedSetup) { setup in
-                SavedSetupDetailView(setup: setup)
+                LogDetailView(setup: setup)
             }
         }
     }
@@ -44,37 +44,45 @@ struct SavedSetupsView: View {
     }
 }
 
-struct SavedSetupRow: View {
+struct LogRow: View {
     let setup: SavedSetup
 
     var body: some View {
         HStack(spacing: 14) {
-            VStack {
-                Image(systemName: setup.isFoodGrade ? "star.circle.fill" : "slider.horizontal.3")
-                    .font(.title2)
-                    .foregroundStyle(setup.isFoodGrade ? .green : .red)
-            }
-            .frame(width: 36)
+            Image(systemName: setup.isFoodGrade ? "star.circle.fill" : "slider.horizontal.3")
+                .font(.title2)
+                .foregroundStyle(setup.isFoodGrade ? .green : .red)
+                .frame(width: 36)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(setup.fieldName)
                     .font(.subheadline.bold())
-                HStack(spacing: 8) {
+                HStack(spacing: 6) {
                     Text(setup.cropType)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
                     Text("·")
                         .foregroundStyle(.tertiary)
-                    Text(setup.combineModel)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    Text("Axial-Flow \(setup.combineModel)")
                 }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
                 Text(setup.dateCreated.formatted(date: .abbreviated, time: .shortened))
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
 
             Spacer()
+
+            if setup.sampleQualityRating > 0 {
+                HStack(spacing: 2) {
+                    Image(systemName: "star.fill")
+                        .font(.caption2)
+                        .foregroundStyle(.yellow)
+                    Text("\(setup.sampleQualityRating)")
+                        .font(.caption2.bold())
+                        .foregroundStyle(.secondary)
+                }
+            }
 
             Image(systemName: "chevron.right")
                 .font(.caption)
@@ -84,10 +92,9 @@ struct SavedSetupRow: View {
     }
 }
 
-struct SavedSetupDetailView: View {
+struct LogDetailView: View {
     let setup: SavedSetup
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var modelContext
     @State private var notes: String
     @State private var qualityRating: Int
 
@@ -102,7 +109,7 @@ struct SavedSetupDetailView: View {
             ScrollView {
                 VStack(spacing: 20) {
                     detailHeader
-                    settingsSection
+                    settingsGrid
                     qualitySection
                     notesSection
                 }
@@ -153,13 +160,13 @@ struct SavedSetupDetailView: View {
         .clipShape(.rect(cornerRadius: 14))
     }
 
-    private var settingsSection: some View {
+    private var settingsGrid: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Settings")
                 .font(.headline)
                 .padding(.leading, 4)
 
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
                 SettingCard(icon: "circle.grid.cross", label: "Concave", value: setup.concaveClearance)
                 SettingCard(icon: "arrow.trianglehead.2.counterclockwise.rotate.90", label: "Rotor Speed", value: setup.rotorSpeed)
                 SettingCard(icon: "wind", label: "Fan Speed", value: setup.fanSpeed)
@@ -181,7 +188,11 @@ struct SavedSetupDetailView: View {
     }
 
     private var qualitySection: some View {
-        SectionCard(title: "Sample Quality Rating", icon: "star") {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Sample Quality Rating", systemImage: "star")
+                .font(.subheadline.bold())
+                .foregroundStyle(.secondary)
+
             HStack(spacing: 8) {
                 ForEach(1...5, id: \.self) { star in
                     Button {
@@ -200,13 +211,23 @@ struct SavedSetupDetailView: View {
                 }
             }
         }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(.rect(cornerRadius: 14))
     }
 
     private var notesSection: some View {
-        SectionCard(title: "Field Notes", icon: "note.text") {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Field Notes", systemImage: "note.text")
+                .font(.subheadline.bold())
+                .foregroundStyle(.secondary)
+
             TextField("Add notes about this setup...", text: $notes, axis: .vertical)
                 .lineLimit(3...8)
                 .font(.subheadline)
         }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(.rect(cornerRadius: 14))
     }
 }
