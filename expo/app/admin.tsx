@@ -10,11 +10,10 @@ import {
   Alert,
   Platform,
   ActivityIndicator,
-  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Plus, Trash2, ChevronRight, LayoutList, LayoutGrid, ExternalLink } from 'lucide-react-native';
+import { Plus, Trash2, ChevronRight, LayoutList, LayoutGrid, RotateCcw } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/store/AppContext';
 import { SegmentedControl } from '@/components/SegmentedControl';
@@ -25,6 +24,7 @@ import {
   SettingPreset, QuickTip, QuickIssue,
   CropType, AutomationMode, CROP_TYPES,
 } from '@/types';
+import { DEFAULT_PRESETS } from '@/mocks/presets';
 
 const AUTO_MODES: AutomationMode[] = ['Quality Priority', 'Throughput Priority', 'Balanced'];
 
@@ -222,22 +222,6 @@ export default function AdminScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      {/* Web editor info banner */}
-      <TouchableOpacity
-        style={styles.webBanner}
-        onPress={() => Linking.openURL('https://app.supabase.com')}
-        activeOpacity={0.75}
-        testID="web-editor-banner"
-      >
-        <View style={styles.webBannerLeft}>
-          <View style={styles.webBannerDot} />
-          <Text style={styles.webBannerText}>
-            Bulk editing? Use the <Text style={styles.webBannerLink}>Supabase web editor</Text> for a full spreadsheet view.
-          </Text>
-        </View>
-        <ExternalLink size={14} color={Colors.info} />
-      </TouchableOpacity>
-
       <View style={styles.segmentWrap}>
         <SegmentedControl options={['Settings', 'Tips', 'Issues']} selectedIndex={segment} onChange={setSegment} />
       </View>
@@ -291,6 +275,34 @@ export default function AdminScreen() {
               </TouchableOpacity>
             </View>
           </View>
+
+          {viewMode === 'card' && (
+            <TouchableOpacity
+              style={styles.resetDefaultsBtn}
+              onPress={() => {
+                Alert.alert(
+                  'Reset to Defaults',
+                  'This will overwrite ALL current preset settings with the original factory defaults. This cannot be undone.\n\nAre you sure?',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                      text: 'Reset All',
+                      style: 'destructive',
+                      onPress: () => {
+                        setLocalPresets([...DEFAULT_PRESETS]);
+                        Alert.alert('Defaults Restored', 'All presets have been reset. Tap \'Save Changes\' to apply.');
+                      },
+                    },
+                  ]
+                );
+              }}
+              activeOpacity={0.7}
+              testID="reset-defaults-btn"
+            >
+              <RotateCcw size={13} color={Colors.textTertiary} />
+              <Text style={styles.resetDefaultsBtnText}>Reset to Defaults</Text>
+            </TouchableOpacity>
+          )}
 
           {viewMode === 'table' ? (
             <View style={styles.tableWrap}>
@@ -377,22 +389,19 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 17, fontWeight: '700', color: Colors.text },
   headerSpacer: { minWidth: 60 },
 
-  webBanner: {
+  segmentWrap: { paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: Colors.border },
+
+  resetDefaultsBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: Colors.info + '12',
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.info + '30',
+    gap: 5,
+    alignSelf: 'flex-end',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginHorizontal: 12,
+    marginBottom: 2,
   },
-  webBannerLeft: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, marginRight: 10 },
-  webBannerDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.info, flexShrink: 0 },
-  webBannerText: { fontSize: 12, color: Colors.textSecondary, lineHeight: 17, flex: 1 },
-  webBannerLink: { color: Colors.info, fontWeight: '600' },
-
-  segmentWrap: { paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: Colors.border },
+  resetDefaultsBtnText: { fontSize: 12, color: Colors.textTertiary, fontWeight: '500' },
 
   filterBarWrap: {
     flexDirection: 'row',
