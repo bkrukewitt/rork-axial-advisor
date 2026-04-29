@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '@/constants/colors';
 
-const LOGO_URI = 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/1ftdc5nqjl6xg4zbworqc.png';
+const BANNER_URI = 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/v7kx356jyopryqevteicx.png';
 
 interface AppHeaderProps {
   onAdminTrigger: () => void;
@@ -35,12 +35,11 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onAdminTrigger }) => {
     <View style={styles.container}>
       <TouchableOpacity
         onPress={handleLogoPress}
-        activeOpacity={0.85}
-        style={styles.logoArea}
+        activeOpacity={0.92}
+        style={styles.bannerWrapper}
         testID="header-logo"
       >
-        <Image source={{ uri: LOGO_URI }} style={styles.logoImage} resizeMode="contain" />
-        <Text style={styles.title}>AXIAL ADVISOR</Text>
+        <Image source={{ uri: BANNER_URI }} style={styles.bannerImage} resizeMode="cover" />
       </TouchableOpacity>
     </View>
   );
@@ -48,25 +47,18 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onAdminTrigger }) => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 16,
-    alignItems: 'center',
+    paddingBottom: 12,
   },
-  logoArea: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 8,
+  bannerWrapper: {
+    width: '100%',
+    borderRadius: 14,
+    overflow: 'hidden',
   },
-  logoImage: {
-    width: 64,
-    height: 64,
-    borderRadius: 12,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: Colors.text,
-    letterSpacing: 1,
+  bannerImage: {
+    width: '100%',
+    height: 90,
+    borderRadius: 14,
   },
 });
