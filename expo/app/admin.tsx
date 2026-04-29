@@ -10,14 +10,17 @@ import {
   Alert,
   Platform,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Plus, Trash2, ChevronRight } from 'lucide-react-native';
+import { Plus, Trash2, ChevronRight, LayoutList, LayoutGrid, ExternalLink } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/store/AppContext';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { PickerModal } from '@/components/PickerModal';
+import { PresetTableView } from '@/components/PresetTableView';
+import { PresetEditModal } from '@/components/PresetEditModal';
 import {
   SettingPreset, QuickTip, QuickIssue,
   CropType, AutomationMode, CROP_TYPES,
@@ -142,6 +145,9 @@ export default function AdminScreen() {
   const [cropPickerOpen, setCropPickerOpen] = useState(false);
   const [editingAutoPresetId, setEditingAutoPresetId] = useState<string | null>(null);
 
+  const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
+  const [editingTablePreset, setEditingTablePreset] = useState<SettingPreset | null>(null);
+
   const filteredPresets = localPresets.filter(p => {
     if (p.crop !== cropFilter) return false;
     if (cropFilter === 'Corn') return p.isFoodGrade === foodGradeFilter;
@@ -150,6 +156,11 @@ export default function AdminScreen() {
 
   const updatePreset = useCallback((id: string, field: keyof SettingPreset, value: string | boolean | AutomationMode) => {
     setLocalPresets(prev => prev.map(p => p.id === id ? { ...p, [field]: value } as SettingPreset : p));
+  }, []);
+
+  const handleTablePresetSave = useCallback((updated: SettingPreset) => {
+    setLocalPresets(prev => prev.map(p => p.id === updated.id ? updated : p));
+    setEditingTablePreset(null);
   }, []);
 
   const handleSavePresets = useCallback(async () => {
@@ -211,39 +222,103 @@ export default function AdminScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
+      {/* Web editor info banner */}
+      <TouchableOpacity
+        style={styles.webBanner}
+        onPress={() => Linking.openURL('https://app.supabase.com')}
+        activeOpacity={0.75}
+        testID="web-editor-banner"
+      >
+        <View style={styles.webBannerLeft}>
+          <View style={styles.webBannerDot} />
+          <Text style={styles.webBannerText}>
+            Bulk editing? Use the <Text style={styles.webBannerLink}>Supabase web editor</Text> for a full spreadsheet view.
+          </Text>
+        </View>
+        <ExternalLink size={14} color={Colors.info} />
+      </TouchableOpacity>
+
       <View style={styles.segmentWrap}>
         <SegmentedControl options={['Settings', 'Tips', 'Issues']} selectedIndex={segment} onChange={setSegment} />
       </View>
 
       {segment === 0 && (
-        <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-          <View style={styles.filterBar}>
-            <TouchableOpacity style={styles.filterPicker} onPress={() => setCropPickerOpen(true)} activeOpacity={0.7}>
-              <Text style={styles.filterLabel}>Crop:</Text>
-              <Text style={styles.filterValue}>{cropFilter}</Text>
-              <ChevronRight size={14} color={Colors.textTertiary} />
-            </TouchableOpacity>
-            {cropFilter === 'Corn' && (
-              <View style={styles.filterToggle}>
-                <Text style={styles.filterLabel}>Food-Grade</Text>
-                <Switch
-                  value={foodGradeFilter}
-                  onValueChange={setFoodGradeFilter}
-                  trackColor={{ false: Colors.border, true: Colors.red }}
-                  thumbColor={Platform.OS === 'android' ? Colors.text : undefined}
-                />
+        <>
+          {/* Filter bar + view toggle */}
+          <View style={styles.filterBarWrap}>
+            {viewMode === 'card' && (
+              <View style={styles.filterBar}>
+                <TouchableOpacity style={styles.filterPicker} onPress={() => setCropPickerOpen(true)} activeOpacity={0.7}>
+                  <Text style={styles.filterLabel}>Crop:</Text>
+                  <Text style={styles.filterValue}>{cropFilter}</Text>
+                  <ChevronRight size={14} color={Colors.textTertiary} />
+                </TouchableOpacity>
+                {cropFilter === 'Corn' && (
+                  <View style={styles.filterToggle}>
+                    <Text style={styles.filterLabel}>Food-Grade</Text>
+                    <Switch
+                      value={foodGradeFilter}
+                      onValueChange={setFoodGradeFilter}
+                      trackColor={{ false: Colors.border, true: Colors.red }}
+                      thumbColor={Platform.OS === 'android' ? Colors.text : undefined}
+                    />
+                  </View>
+                )}
               </View>
             )}
+            {viewMode === 'table' && (
+              <View style={styles.tableModeHint}>
+                <Text style={styles.tableModeHintText}>All crops · Tap any row to edit</Text>
+              </View>
+            )}
+            {/* Card / Table toggle */}
+            <View style={styles.viewToggle}>
+              <TouchableOpacity
+                style={[styles.viewToggleBtn, viewMode === 'card' && styles.viewToggleBtnActive]}
+                onPress={() => setViewMode('card')}
+                activeOpacity={0.7}
+                testID="view-toggle-card"
+              >
+                <LayoutList size={16} color={viewMode === 'card' ? Colors.text : Colors.textTertiary} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.viewToggleBtn, viewMode === 'table' && styles.viewToggleBtnActive]}
+                onPress={() => setViewMode('table')}
+                activeOpacity={0.7}
+                testID="view-toggle-table"
+              >
+                <LayoutGrid size={16} color={viewMode === 'table' ? Colors.text : Colors.textTertiary} />
+              </TouchableOpacity>
+            </View>
           </View>
-          <Text style={styles.sectionNote}>{filteredPresets.length} preset{filteredPresets.length !== 1 ? 's' : ''} for {cropFilter}{foodGradeFilter ? ' (Food-Grade)' : ''}</Text>
-          {filteredPresets.map(preset => (
-            <PresetCard key={preset.id} preset={preset} onUpdate={updatePreset} onEditAuto={setEditingAutoPresetId} />
-          ))}
-          <TouchableOpacity style={[styles.saveBtn, isSaving && styles.saveBtnDisabled]} onPress={handleSavePresets} disabled={isSaving}>
-            {isSaving ? <ActivityIndicator color={Colors.text} /> : <Text style={styles.saveBtnText}>Save Changes</Text>}
-          </TouchableOpacity>
-          <View style={styles.bottomPad} />
-        </ScrollView>
+
+          {viewMode === 'table' ? (
+            <View style={styles.tableWrap}>
+              <PresetTableView
+                presets={localPresets}
+                onEdit={setEditingTablePreset}
+              />
+              <TouchableOpacity
+                style={[styles.saveBtn, isSaving && styles.saveBtnDisabled]}
+                onPress={handleSavePresets}
+                disabled={isSaving}
+              >
+                {isSaving ? <ActivityIndicator color={Colors.text} /> : <Text style={styles.saveBtnText}>Save All Changes</Text>}
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              <Text style={styles.sectionNote}>{filteredPresets.length} preset{filteredPresets.length !== 1 ? 's' : ''} for {cropFilter}{foodGradeFilter ? ' (Food-Grade)' : ''}</Text>
+              {filteredPresets.map(preset => (
+                <PresetCard key={preset.id} preset={preset} onUpdate={updatePreset} onEditAuto={setEditingAutoPresetId} />
+              ))}
+              <TouchableOpacity style={[styles.saveBtn, isSaving && styles.saveBtnDisabled]} onPress={handleSavePresets} disabled={isSaving}>
+                {isSaving ? <ActivityIndicator color={Colors.text} /> : <Text style={styles.saveBtnText}>Save Changes</Text>}
+              </TouchableOpacity>
+              <View style={styles.bottomPad} />
+            </ScrollView>
+          )}
+        </>
       )}
 
       {segment === 1 && (
@@ -283,6 +358,13 @@ export default function AdminScreen() {
         onSelect={val => { if (editingAutoPresetId) updatePreset(editingAutoPresetId, 'automationMode', val as AutomationMode); setEditingAutoPresetId(null); }}
         onClose={() => setEditingAutoPresetId(null)}
       />
+
+      <PresetEditModal
+        preset={editingTablePreset}
+        visible={editingTablePreset !== null}
+        onSave={handleTablePresetSave}
+        onClose={() => setEditingTablePreset(null)}
+      />
     </SafeAreaView>
   );
 }
@@ -294,14 +376,48 @@ const styles = StyleSheet.create({
   doneBtnText: { fontSize: 17, fontWeight: '600', color: Colors.red },
   headerTitle: { fontSize: 17, fontWeight: '700', color: Colors.text },
   headerSpacer: { minWidth: 60 },
+
+  webBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: Colors.info + '12',
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.info + '30',
+  },
+  webBannerLeft: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, marginRight: 10 },
+  webBannerDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.info, flexShrink: 0 },
+  webBannerText: { fontSize: 12, color: Colors.textSecondary, lineHeight: 17, flex: 1 },
+  webBannerLink: { color: Colors.info, fontWeight: '600' },
+
   segmentWrap: { paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  scroll: { flex: 1 },
-  scrollContent: { padding: 16, gap: 12 },
-  filterBar: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.surfaceElevated, borderRadius: 12, borderWidth: 1, borderColor: Colors.border, paddingHorizontal: 14, paddingVertical: 10, flexWrap: 'wrap' },
+
+  filterBarWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    gap: 8,
+  },
+  filterBar: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.surfaceElevated, borderRadius: 10, borderWidth: 1, borderColor: Colors.border, paddingHorizontal: 12, paddingVertical: 8, flexWrap: 'wrap' },
   filterPicker: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   filterLabel: { fontSize: 13, color: Colors.textSecondary, fontWeight: '600' },
   filterValue: { fontSize: 14, color: Colors.text, fontWeight: '700' },
   filterToggle: { flexDirection: 'row', alignItems: 'center', gap: 8, marginLeft: 'auto' },
+  tableModeHint: { flex: 1, paddingHorizontal: 4 },
+  tableModeHintText: { fontSize: 12, color: Colors.textTertiary, fontWeight: '500' },
+  viewToggle: { flexDirection: 'row', backgroundColor: Colors.surface, borderRadius: 9, borderWidth: 1, borderColor: Colors.border, overflow: 'hidden' },
+  viewToggleBtn: { padding: 8 },
+  viewToggleBtnActive: { backgroundColor: Colors.red },
+
+  tableWrap: { flex: 1, paddingBottom: 12 },
+
+  scroll: { flex: 1 },
+  scrollContent: { padding: 16, gap: 12 },
   sectionNote: { fontSize: 12, color: Colors.textTertiary, marginBottom: 4 },
   presetCard: { backgroundColor: Colors.surfaceElevated, borderRadius: 14, borderWidth: 1, borderColor: Colors.border, overflow: 'hidden' },
   presetHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 10, backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.border },
@@ -319,7 +435,7 @@ const styles = StyleSheet.create({
   autoValue: { fontSize: 14, color: Colors.textSecondary, fontWeight: '500' },
   addBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.red, borderStyle: 'dashed' },
   addBtnText: { fontSize: 15, fontWeight: '600', color: Colors.red },
-  saveBtn: { backgroundColor: Colors.red, borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginTop: 8 },
+  saveBtn: { backgroundColor: Colors.red, borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginTop: 8, marginHorizontal: 12 },
   saveBtnDisabled: { opacity: 0.6 },
   saveBtnText: { fontSize: 16, fontWeight: '700', color: Colors.text },
   bottomPad: { height: 20 },
