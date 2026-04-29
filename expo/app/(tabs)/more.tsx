@@ -8,7 +8,8 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AlertTriangle, Globe, Info, ExternalLink } from 'lucide-react-native';
+import { AlertTriangle, Globe, Info, ExternalLink, Bug, Lightbulb, MessageCircle } from 'lucide-react-native';
+import { Linking } from 'react-native';
 import { Colors } from '@/constants/colors';
 
 const APP_VERSION = '1.0.0';
@@ -76,17 +77,42 @@ export default function MoreScreen() {
               <Text style={styles.disclaimerBold}>For Reference Only</Text>
             </View>
             <Text style={styles.disclaimerBody}>
-              Settings provided are starting guidelines only. Always consult your Operator&apos;s Manual
-              and adjust based on crop conditions and machine performance.
+              All recommendations provided by this app are guidelines only. Operator judgement is always required. Actual settings may vary based on field conditions, equipment condition, and crop variety. Always prioritize safety and equipment manufacturer guidelines. Consult your Operator's Manual.
             </Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.legalWrap}>
             <Info size={14} color={Colors.textTertiary} />
             <Text style={styles.legalText}>
-              Axial Advisor is not affiliated with CNH Industrial or Case IH. All brand names used for reference only.
+              Axial Advisor is not affiliated, endorsed by, or sponsored by Case IH, CNH Industrial, or any of their subsidiaries.
             </Text>
           </View>
+        </Section>
+
+        <Section title="Support">
+          <TouchableOpacity
+            style={styles.supportRow}
+            activeOpacity={0.7}
+            onPress={() => Linking.openURL('mailto:support@axialadvisor.com?subject=Bug%20Report')}
+          >
+            <View style={styles.supportIconWrap}>
+              <Bug size={18} color={Colors.error || '#E53935'} />
+            </View>
+            <Text style={styles.supportLabel}>Report an Issue</Text>
+            <ExternalLink size={14} color={Colors.textTertiary} />
+          </TouchableOpacity>
+          <View style={styles.divider} />
+          <TouchableOpacity
+            style={styles.supportRow}
+            activeOpacity={0.7}
+            onPress={() => Linking.openURL('mailto:support@axialadvisor.com?subject=Feature%20Request')}
+          >
+            <View style={[styles.supportIconWrap, styles.supportIconWrapBlue]}>
+              <Lightbulb size={18} color={Colors.primary || '#1565C0'} />
+            </View>
+            <Text style={styles.supportLabel}>Feature Request</Text>
+            <ExternalLink size={14} color={Colors.textTertiary} />
+          </TouchableOpacity>
         </Section>
 
         <Text style={styles.footer}>Built for the field · v{APP_VERSION}</Text>
@@ -117,4 +143,8 @@ const styles = StyleSheet.create({
   legalWrap: { flexDirection: 'row', padding: 16, gap: 8, alignItems: 'flex-start' },
   legalText: { flex: 1, fontSize: 12, color: Colors.textTertiary, lineHeight: 18 },
   footer: { textAlign: 'center', fontSize: 12, color: Colors.textTertiary, paddingHorizontal: 20, marginTop: 4 },
+  supportRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, gap: 12 },
+  supportIconWrap: { width: 32, height: 32, borderRadius: 8, backgroundColor: 'rgba(229,57,53,0.10)', alignItems: 'center', justifyContent: 'center' },
+  supportIconWrapBlue: { backgroundColor: 'rgba(21,101,192,0.10)' },
+  supportLabel: { flex: 1, fontSize: 15, color: Colors.text },
 });
