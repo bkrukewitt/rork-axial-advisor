@@ -8,7 +8,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AlertTriangle, Globe, Info, ExternalLink, Bug, Lightbulb, MessageCircle } from 'lucide-react-native';
+import { AlertTriangle, Info, ExternalLink, MessageCircle } from 'lucide-react-native';
 import { Linking } from 'react-native';
 import { Colors } from '@/constants/colors';
 
@@ -93,24 +93,12 @@ export default function MoreScreen() {
           <TouchableOpacity
             style={styles.supportRow}
             activeOpacity={0.7}
-            onPress={() => Linking.openURL('mailto:support@axialadvisor.com?subject=Bug%20Report')}
+            onPress={() => Linking.openURL('https://docs.google.com/forms/d/e/1FAIpQLScongzrmuecps4AbKFjDn1ge_Ov-uSJ-5jwahBTRDPoZJUaLQ/viewform?usp=header')}
           >
             <View style={styles.supportIconWrap}>
-              <Bug size={18} color={Colors.error || '#E53935'} />
+              <MessageCircle size={18} color={Colors.primary || '#1565C0'} />
             </View>
-            <Text style={styles.supportLabel}>Report an Issue</Text>
-            <ExternalLink size={14} color={Colors.textTertiary} />
-          </TouchableOpacity>
-          <View style={styles.divider} />
-          <TouchableOpacity
-            style={styles.supportRow}
-            activeOpacity={0.7}
-            onPress={() => Linking.openURL('mailto:support@axialadvisor.com?subject=Feature%20Request')}
-          >
-            <View style={[styles.supportIconWrap, styles.supportIconWrapBlue]}>
-              <Lightbulb size={18} color={Colors.primary || '#1565C0'} />
-            </View>
-            <Text style={styles.supportLabel}>Feature Request</Text>
+            <Text style={styles.supportLabel}>Send Feedback</Text>
             <ExternalLink size={14} color={Colors.textTertiary} />
           </TouchableOpacity>
         </Section>
@@ -144,7 +132,6 @@ const styles = StyleSheet.create({
   legalText: { flex: 1, fontSize: 12, color: Colors.textTertiary, lineHeight: 18 },
   footer: { textAlign: 'center', fontSize: 12, color: Colors.textTertiary, paddingHorizontal: 20, marginTop: 4 },
   supportRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, gap: 12 },
-  supportIconWrap: { width: 32, height: 32, borderRadius: 8, backgroundColor: 'rgba(229,57,53,0.10)', alignItems: 'center', justifyContent: 'center' },
-  supportIconWrapBlue: { backgroundColor: 'rgba(21,101,192,0.10)' },
+  supportIconWrap: { width: 32, height: 32, borderRadius: 8, backgroundColor: 'rgba(21,101,192,0.10)', alignItems: 'center', justifyContent: 'center' },
   supportLabel: { flex: 1, fontSize: 15, color: Colors.text },
 });
