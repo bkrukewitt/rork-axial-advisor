@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '@/constants/colors';
 
-const BANNER_URI = 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/v7kx356jyopryqevteicx.png';
+const BANNER_URI = 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/ma1kouq3wntwazhk7mru8.png';
 
 interface AppHeaderProps {
   onAdminTrigger: () => void;
