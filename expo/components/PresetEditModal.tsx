@@ -11,10 +11,11 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { X, ChevronRight } from 'lucide-react-native';
+import { X, ChevronRight, RotateCcw } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { SettingPreset, AutomationMode, CropType } from '@/types';
 import { PickerModal } from '@/components/PickerModal';
+import { DEFAULT_PRESETS } from '@/mocks/presets';
 
 const AUTO_MODES: AutomationMode[] = ['Quality Priority', 'Throughput Priority', 'Balanced'];
 
@@ -32,24 +33,40 @@ interface FieldRowProps {
   label: string;
   value: string;
   onChange: (v: string) => void;
+  defaultValue?: string;
+  onRevert?: () => void;
   multiline?: boolean;
   testId?: string;
 }
 
-const FieldRow: React.FC<FieldRowProps> = ({ label, value, onChange, multiline, testId }) => (
-  <View style={styles.fieldRow}>
-    <Text style={styles.fieldLabel}>{label}</Text>
-    <TextInput
-      style={[styles.fieldInput, multiline && styles.fieldInputMulti]}
-      value={value}
-      onChangeText={onChange}
-      multiline={multiline}
-      numberOfLines={multiline ? 3 : 1}
-      placeholderTextColor={Colors.textTertiary}
-      testID={testId}
-    />
-  </View>
-);
+const FieldRow: React.FC<FieldRowProps> = ({ label, value, onChange, defaultValue, onRevert, multiline, testId }) => {
+  const isChanged = defaultValue !== undefined && value !== defaultValue;
+  return (
+    <View style={styles.fieldRow}>
+      <View style={styles.fieldLabelRow}>
+        <Text style={styles.fieldLabel}>{label}</Text>
+        {isChanged && onRevert && (
+          <TouchableOpacity onPress={onRevert} style={styles.revertBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <RotateCcw size={11} color={Colors.warning} />
+            <Text style={styles.revertBtnText}>Revert</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+      <TextInput
+        style={[styles.fieldInput, multiline && styles.fieldInputMulti, isChanged && styles.fieldInputChanged]}
+        value={value}
+        onChangeText={onChange}
+        multiline={multiline}
+        numberOfLines={multiline ? 3 : 1}
+        placeholderTextColor={Colors.textTertiary}
+        testID={testId}
+      />
+      {isChanged && defaultValue !== undefined && (
+        <Text style={styles.defaultHint}>Default: {defaultValue}</Text>
+      )}
+    </View>
+  );
+};
 
 interface PresetEditModalProps {
   preset: SettingPreset | null;
@@ -66,6 +83,8 @@ export const PresetEditModal: React.FC<PresetEditModalProps> = ({
 }) => {
   const [local, setLocal] = useState<SettingPreset | null>(null);
   const [autoPickerOpen, setAutoPickerOpen] = useState(false);
+
+  const defaultPreset = preset ? DEFAULT_PRESETS.find(d => d.id === preset.id) ?? null : null;
 
   const handleShow = useCallback(() => {
     if (preset) setLocal({ ...preset });
@@ -86,9 +105,16 @@ export const PresetEditModal: React.FC<PresetEditModalProps> = ({
     setLocal(prev => prev ? { ...prev, [field]: value } : prev);
   }, []);
 
+  const revert = useCallback(<K extends keyof SettingPreset>(field: K) => {
+    if (defaultPreset) {
+      setLocal(prev => prev ? { ...prev, [field]: defaultPreset[field] } : prev);
+    }
+  }, [defaultPreset]);
+
   if (!preset) return null;
 
   const cropColor = CROP_COLOR[preset.crop];
+  const autoIsChanged = defaultPreset && local?.automationMode !== defaultPreset.automationMode;
 
   return (
     <>
@@ -107,7 +133,6 @@ export const PresetEditModal: React.FC<PresetEditModalProps> = ({
             <Pressable style={styles.sheet} onPress={() => {}}>
               <View style={styles.handle} />
 
-              {/* Header */}
               <View style={styles.header}>
                 <View style={styles.headerLeft}>
                   <View style={[styles.cropBadge, { backgroundColor: cropColor + '20', borderColor: cropColor + '50' }]}>
@@ -135,6 +160,8 @@ export const PresetEditModal: React.FC<PresetEditModalProps> = ({
                   label="Concave Clearance"
                   value={local?.concave ?? ''}
                   onChange={v => update('concave', v)}
+                  defaultValue={defaultPreset?.concave}
+                  onRevert={() => revert('concave')}
                   testId="edit-concave"
                 />
                 <View style={styles.divider} />
@@ -142,6 +169,8 @@ export const PresetEditModal: React.FC<PresetEditModalProps> = ({
                   label="Rotor Speed"
                   value={local?.rotor ?? ''}
                   onChange={v => update('rotor', v)}
+                  defaultValue={defaultPreset?.rotor}
+                  onRevert={() => revert('rotor')}
                   testId="edit-rotor"
                 />
                 <View style={styles.divider} />
@@ -149,6 +178,8 @@ export const PresetEditModal: React.FC<PresetEditModalProps> = ({
                   label="Fan Speed"
                   value={local?.fan ?? ''}
                   onChange={v => update('fan', v)}
+                  defaultValue={defaultPreset?.fan}
+                  onRevert={() => revert('fan')}
                   testId="edit-fan"
                 />
                 <View style={styles.divider} />
@@ -156,6 +187,8 @@ export const PresetEditModal: React.FC<PresetEditModalProps> = ({
                   label="Top Sieve"
                   value={local?.topSieve ?? ''}
                   onChange={v => update('topSieve', v)}
+                  defaultValue={defaultPreset?.topSieve}
+                  onRevert={() => revert('topSieve')}
                   testId="edit-topSieve"
                 />
                 <View style={styles.divider} />
@@ -163,20 +196,38 @@ export const PresetEditModal: React.FC<PresetEditModalProps> = ({
                   label="Bottom Sieve"
                   value={local?.bottomSieve ?? ''}
                   onChange={v => update('bottomSieve', v)}
+                  defaultValue={defaultPreset?.bottomSieve}
+                  onRevert={() => revert('bottomSieve')}
                   testId="edit-bottomSieve"
                 />
                 <View style={styles.divider} />
 
-                {/* Automation Mode picker row */}
                 <TouchableOpacity
                   style={styles.autoRow}
                   onPress={() => setAutoPickerOpen(true)}
                   activeOpacity={0.7}
                   testID="edit-autoMode"
                 >
-                  <Text style={styles.fieldLabel}>Automation Mode</Text>
+                  <View style={styles.autoLabelCol}>
+                    <Text style={styles.fieldLabel}>Automation Mode</Text>
+                    {autoIsChanged && defaultPreset && (
+                      <Text style={styles.defaultHint}>Default: {defaultPreset.automationMode}</Text>
+                    )}
+                  </View>
                   <View style={styles.autoRowRight}>
-                    <Text style={styles.autoValue}>{local?.automationMode ?? preset.automationMode}</Text>
+                    {autoIsChanged && (
+                      <TouchableOpacity
+                        onPress={() => revert('automationMode')}
+                        style={styles.revertBtn}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <RotateCcw size={11} color={Colors.warning} />
+                        <Text style={styles.revertBtnText}>Revert</Text>
+                      </TouchableOpacity>
+                    )}
+                    <Text style={[styles.autoValue, autoIsChanged && styles.autoValueChanged]}>
+                      {local?.automationMode ?? preset.automationMode}
+                    </Text>
                     <ChevronRight size={16} color={Colors.textTertiary} />
                   </View>
                 </TouchableOpacity>
@@ -186,11 +237,12 @@ export const PresetEditModal: React.FC<PresetEditModalProps> = ({
                   label="Notes"
                   value={local?.notes ?? ''}
                   onChange={v => update('notes', v)}
+                  defaultValue={defaultPreset?.notes}
+                  onRevert={() => revert('notes')}
                   multiline
                   testId="edit-notes"
                 />
 
-                {/* Action buttons */}
                 <View style={styles.actions}>
                   <TouchableOpacity style={styles.cancelBtn} onPress={handleClose} testID="edit-cancel">
                     <Text style={styles.cancelText}>Cancel</Text>
@@ -302,12 +354,34 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     gap: 5,
   },
+  fieldLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   fieldLabel: {
     fontSize: 11,
     fontWeight: '700',
     color: Colors.textTertiary,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
+  },
+  revertBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: Colors.warning + '18',
+    borderRadius: 5,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: Colors.warning + '40',
+  },
+  revertBtnText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: Colors.warning,
+    letterSpacing: 0.3,
   },
   fieldInput: {
     fontSize: 15,
@@ -316,9 +390,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
+  fieldInputChanged: {
+    color: Colors.warning,
+    borderBottomColor: Colors.warning + '60',
+  },
   fieldInputMulti: {
     minHeight: 68,
     textAlignVertical: 'top',
+  },
+  defaultHint: {
+    fontSize: 11,
+    color: Colors.textTertiary,
+    fontStyle: 'italic',
+    marginTop: 2,
   },
   autoRow: {
     flexDirection: 'row',
@@ -326,15 +410,22 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 14,
   },
+  autoLabelCol: {
+    gap: 2,
+    flex: 1,
+  },
   autoRowRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
   autoValue: {
     fontSize: 15,
     color: Colors.textSecondary,
     fontWeight: '500',
+  },
+  autoValueChanged: {
+    color: Colors.warning,
   },
   actions: {
     flexDirection: 'row',

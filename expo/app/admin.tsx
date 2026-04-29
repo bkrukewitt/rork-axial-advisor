@@ -32,59 +32,131 @@ interface FieldInputProps {
   label: string;
   value: string;
   onChange: (v: string) => void;
+  defaultValue?: string;
+  onRevert?: () => void;
   multiline?: boolean;
 }
-const FieldInput: React.FC<FieldInputProps> = ({ label, value, onChange, multiline }) => (
-  <View style={styles.fieldRow}>
-    <Text style={styles.fieldLabel}>{label}</Text>
-    <TextInput
-      style={[styles.fieldInput, multiline && styles.fieldInputMulti]}
-      value={value}
-      onChangeText={onChange}
-      multiline={multiline}
-      numberOfLines={multiline ? 3 : 1}
-      placeholderTextColor={Colors.textTertiary}
-      testID={`admin-field-${label}`}
-    />
-  </View>
-);
+const FieldInput: React.FC<FieldInputProps> = ({ label, value, onChange, defaultValue, onRevert, multiline }) => {
+  const isChanged = defaultValue !== undefined && value !== defaultValue;
+  return (
+    <View style={styles.fieldRow}>
+      <View style={styles.fieldLabelRow}>
+        <Text style={styles.fieldLabel}>{label}</Text>
+        {isChanged && onRevert && (
+          <TouchableOpacity onPress={onRevert} style={styles.revertBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <RotateCcw size={11} color={Colors.warning} />
+            <Text style={styles.revertBtnText}>Revert</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+      <TextInput
+        style={[styles.fieldInput, multiline && styles.fieldInputMulti, isChanged && styles.fieldInputChanged]}
+        value={value}
+        onChangeText={onChange}
+        multiline={multiline}
+        numberOfLines={multiline ? 3 : 1}
+        placeholderTextColor={Colors.textTertiary}
+        testID={`admin-field-${label}`}
+      />
+      {isChanged && defaultValue !== undefined && (
+        <Text style={styles.defaultHint}>Default: {defaultValue}</Text>
+      )}
+    </View>
+  );
+};
 
 interface PresetCardProps {
   preset: SettingPreset;
+  defaultPreset: SettingPreset | undefined;
   onUpdate: (id: string, field: keyof SettingPreset, value: string | boolean | AutomationMode) => void;
   onEditAuto: (id: string) => void;
 }
-const PresetCard: React.FC<PresetCardProps> = React.memo(({ preset, onUpdate, onEditAuto }) => (
-  <View style={styles.presetCard}>
-    <View style={styles.presetHeader}>
-      <Text style={styles.presetMoisture}>{preset.moisture}</Text>
-      {preset.isFoodGrade && (
-        <View style={styles.foodGradeBadge}>
-          <Text style={styles.foodGradeBadgeText}>Food-Grade</Text>
-        </View>
-      )}
-    </View>
-    <FieldInput label="Concave" value={preset.concave} onChange={v => onUpdate(preset.id, 'concave', v)} />
-    <View style={styles.cardDivider} />
-    <FieldInput label="Rotor Speed" value={preset.rotor} onChange={v => onUpdate(preset.id, 'rotor', v)} />
-    <View style={styles.cardDivider} />
-    <FieldInput label="Fan Speed" value={preset.fan} onChange={v => onUpdate(preset.id, 'fan', v)} />
-    <View style={styles.cardDivider} />
-    <FieldInput label="Top Sieve" value={preset.topSieve} onChange={v => onUpdate(preset.id, 'topSieve', v)} />
-    <View style={styles.cardDivider} />
-    <FieldInput label="Bottom Sieve" value={preset.bottomSieve} onChange={v => onUpdate(preset.id, 'bottomSieve', v)} />
-    <View style={styles.cardDivider} />
-    <TouchableOpacity style={styles.autoRow} onPress={() => onEditAuto(preset.id)} activeOpacity={0.7}>
-      <Text style={styles.fieldLabel}>Automation Mode</Text>
-      <View style={styles.autoRowRight}>
-        <Text style={styles.autoValue}>{preset.automationMode}</Text>
-        <ChevronRight size={16} color={Colors.textTertiary} />
+const PresetCard: React.FC<PresetCardProps> = React.memo(({ preset, defaultPreset, onUpdate, onEditAuto }) => {
+  const autoIsChanged = defaultPreset && preset.automationMode !== defaultPreset.automationMode;
+  return (
+    <View style={styles.presetCard}>
+      <View style={styles.presetHeader}>
+        <Text style={styles.presetMoisture}>{preset.moisture}</Text>
+        {preset.isFoodGrade && (
+          <View style={styles.foodGradeBadge}>
+            <Text style={styles.foodGradeBadgeText}>Food-Grade</Text>
+          </View>
+        )}
       </View>
-    </TouchableOpacity>
-    <View style={styles.cardDivider} />
-    <FieldInput label="Notes" value={preset.notes} onChange={v => onUpdate(preset.id, 'notes', v)} multiline />
-  </View>
-));
+      <FieldInput
+        label="Concave"
+        value={preset.concave}
+        onChange={v => onUpdate(preset.id, 'concave', v)}
+        defaultValue={defaultPreset?.concave}
+        onRevert={() => defaultPreset && onUpdate(preset.id, 'concave', defaultPreset.concave)}
+      />
+      <View style={styles.cardDivider} />
+      <FieldInput
+        label="Rotor Speed"
+        value={preset.rotor}
+        onChange={v => onUpdate(preset.id, 'rotor', v)}
+        defaultValue={defaultPreset?.rotor}
+        onRevert={() => defaultPreset && onUpdate(preset.id, 'rotor', defaultPreset.rotor)}
+      />
+      <View style={styles.cardDivider} />
+      <FieldInput
+        label="Fan Speed"
+        value={preset.fan}
+        onChange={v => onUpdate(preset.id, 'fan', v)}
+        defaultValue={defaultPreset?.fan}
+        onRevert={() => defaultPreset && onUpdate(preset.id, 'fan', defaultPreset.fan)}
+      />
+      <View style={styles.cardDivider} />
+      <FieldInput
+        label="Top Sieve"
+        value={preset.topSieve}
+        onChange={v => onUpdate(preset.id, 'topSieve', v)}
+        defaultValue={defaultPreset?.topSieve}
+        onRevert={() => defaultPreset && onUpdate(preset.id, 'topSieve', defaultPreset.topSieve)}
+      />
+      <View style={styles.cardDivider} />
+      <FieldInput
+        label="Bottom Sieve"
+        value={preset.bottomSieve}
+        onChange={v => onUpdate(preset.id, 'bottomSieve', v)}
+        defaultValue={defaultPreset?.bottomSieve}
+        onRevert={() => defaultPreset && onUpdate(preset.id, 'bottomSieve', defaultPreset.bottomSieve)}
+      />
+      <View style={styles.cardDivider} />
+      <TouchableOpacity style={styles.autoRow} onPress={() => onEditAuto(preset.id)} activeOpacity={0.7}>
+        <View style={styles.autoLabelCol}>
+          <Text style={styles.fieldLabel}>Automation Mode</Text>
+          {autoIsChanged && defaultPreset && (
+            <Text style={styles.defaultHint}>Default: {defaultPreset.automationMode}</Text>
+          )}
+        </View>
+        <View style={styles.autoRowRight}>
+          {autoIsChanged && defaultPreset && (
+            <TouchableOpacity
+              onPress={() => onUpdate(preset.id, 'automationMode', defaultPreset.automationMode)}
+              style={styles.revertBtn}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <RotateCcw size={11} color={Colors.warning} />
+              <Text style={styles.revertBtnText}>Revert</Text>
+            </TouchableOpacity>
+          )}
+          <Text style={[styles.autoValue, autoIsChanged && styles.fieldInputChangedText]}>{preset.automationMode}</Text>
+          <ChevronRight size={16} color={Colors.textTertiary} />
+        </View>
+      </TouchableOpacity>
+      <View style={styles.cardDivider} />
+      <FieldInput
+        label="Notes"
+        value={preset.notes}
+        onChange={v => onUpdate(preset.id, 'notes', v)}
+        defaultValue={defaultPreset?.notes}
+        onRevert={() => defaultPreset && onUpdate(preset.id, 'notes', defaultPreset.notes)}
+        multiline
+      />
+    </View>
+  );
+});
 
 interface TipCardProps {
   tip: QuickTip;
@@ -228,7 +300,6 @@ export default function AdminScreen() {
 
       {segment === 0 && (
         <>
-          {/* Filter bar + view toggle */}
           <View style={styles.filterBarWrap}>
             {viewMode === 'card' && (
               <View style={styles.filterBar}>
@@ -252,10 +323,9 @@ export default function AdminScreen() {
             )}
             {viewMode === 'table' && (
               <View style={styles.tableModeHint}>
-                <Text style={styles.tableModeHintText}>All crops · Tap any row to edit</Text>
+                <Text style={styles.tableModeHintText}>All crops · Tap any row to edit fields individually</Text>
               </View>
             )}
-            {/* Card / Table toggle */}
             <View style={styles.viewToggle}>
               <TouchableOpacity
                 style={[styles.viewToggleBtn, viewMode === 'card' && styles.viewToggleBtnActive]}
@@ -300,7 +370,7 @@ export default function AdminScreen() {
               testID="reset-defaults-btn"
             >
               <RotateCcw size={13} color={Colors.textTertiary} />
-              <Text style={styles.resetDefaultsBtnText}>Reset to Defaults</Text>
+              <Text style={styles.resetDefaultsBtnText}>Reset All to Defaults</Text>
             </TouchableOpacity>
           )}
 
@@ -322,7 +392,13 @@ export default function AdminScreen() {
             <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               <Text style={styles.sectionNote}>{filteredPresets.length} preset{filteredPresets.length !== 1 ? 's' : ''} for {cropFilter}{foodGradeFilter ? ' (Food-Grade)' : ''}</Text>
               {filteredPresets.map(preset => (
-                <PresetCard key={preset.id} preset={preset} onUpdate={updatePreset} onEditAuto={setEditingAutoPresetId} />
+                <PresetCard
+                  key={preset.id}
+                  preset={preset}
+                  defaultPreset={DEFAULT_PRESETS.find(d => d.id === preset.id)}
+                  onUpdate={updatePreset}
+                  onEditAuto={setEditingAutoPresetId}
+                />
               ))}
               <TouchableOpacity style={[styles.saveBtn, isSaving && styles.saveBtnDisabled]} onPress={handleSavePresets} disabled={isSaving}>
                 {isSaving ? <ActivityIndicator color={Colors.text} /> : <Text style={styles.saveBtnText}>Save Changes</Text>}
@@ -436,11 +512,28 @@ const styles = StyleSheet.create({
   deleteRowBtn: { padding: 4 },
   cardDivider: { height: StyleSheet.hairlineWidth, backgroundColor: Colors.border, marginHorizontal: 14 },
   fieldRow: { paddingHorizontal: 14, paddingVertical: 10, gap: 4 },
+  fieldLabelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   fieldLabel: { fontSize: 11, fontWeight: '600', color: Colors.textTertiary, letterSpacing: 0.8, textTransform: 'uppercase' },
+  revertBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: Colors.warning + '18',
+    borderRadius: 5,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: Colors.warning + '40',
+  },
+  revertBtnText: { fontSize: 10, fontWeight: '700', color: Colors.warning, letterSpacing: 0.3 },
   fieldInput: { fontSize: 14, color: Colors.text, paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: Colors.border },
+  fieldInputChanged: { color: Colors.warning, borderBottomColor: Colors.warning + '60' },
+  fieldInputChangedText: { color: Colors.warning },
   fieldInputMulti: { minHeight: 60, textAlignVertical: 'top' },
+  defaultHint: { fontSize: 11, color: Colors.textTertiary, fontStyle: 'italic', marginTop: 1 },
   autoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 14 },
-  autoRowRight: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  autoLabelCol: { gap: 2, flex: 1 },
+  autoRowRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   autoValue: { fontSize: 14, color: Colors.textSecondary, fontWeight: '500' },
   addBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.red, borderStyle: 'dashed' },
   addBtnText: { fontSize: 15, fontWeight: '600', color: Colors.red },
