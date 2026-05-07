@@ -319,7 +319,8 @@ const AdminsTab: React.FC<AdminsTabProps> = ({ admins, currentId, onAdd, onDelet
 
       <Modal visible={!!editTarget} transparent animationType="fade" onRequestClose={() => setEditTarget(null)}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.kavFill}>
-        <Pressable style={styles.modalOverlay} onPress={() => { Keyboard.dismiss(); setEditTarget(null); }}>
+        <ScrollView style={styles.modalOverlay} contentContainerStyle={styles.modalScrollContent} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" showsVerticalScrollIndicator={false}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => { Keyboard.dismiss(); setEditTarget(null); }} />
           <Pressable style={styles.modalCard} onPress={() => Keyboard.dismiss()}>
             <Text style={styles.modalTitle}>Edit Admin</Text>
             <Text style={styles.modalSub}>Rename or set a new passcode. Leave passcode blank to keep the current one.</Text>
@@ -335,13 +336,14 @@ const AdminsTab: React.FC<AdminsTabProps> = ({ admins, currentId, onAdd, onDelet
               </TouchableOpacity>
             </View>
           </Pressable>
-        </Pressable>
+        </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
 
       <Modal visible={showAdd} transparent animationType="fade" onRequestClose={() => setShowAdd(false)}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.kavFill}>
-        <Pressable style={styles.modalOverlay} onPress={() => { Keyboard.dismiss(); setShowAdd(false); }}>
+        <ScrollView style={styles.modalOverlay} contentContainerStyle={styles.modalScrollContent} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" showsVerticalScrollIndicator={false}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => { Keyboard.dismiss(); setShowAdd(false); }} />
           <Pressable style={styles.modalCard} onPress={() => Keyboard.dismiss()}>
             <Text style={styles.modalTitle}>New Admin</Text>
             <TextInput style={styles.modalInput} placeholder="Name" placeholderTextColor={Colors.textTertiary} value={newName} onChangeText={setNewName} testID="new-admin-name" />
@@ -362,7 +364,7 @@ const AdminsTab: React.FC<AdminsTabProps> = ({ admins, currentId, onAdd, onDelet
               </TouchableOpacity>
             </View>
           </Pressable>
-        </Pressable>
+        </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
     </ScrollView>
@@ -495,7 +497,8 @@ const LogsTab: React.FC<LogsTabProps> = ({ logs, onOpen, countLogsBefore, clearL
 
       <Modal visible={showCsv} transparent animationType="slide" onRequestClose={() => setShowCsv(false)}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.kavFill}>
-        <Pressable style={styles.modalOverlay} onPress={() => { Keyboard.dismiss(); setShowCsv(false); }}>
+        <ScrollView style={styles.modalOverlay} contentContainerStyle={styles.modalScrollContent} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" showsVerticalScrollIndicator={false}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => { Keyboard.dismiss(); setShowCsv(false); }} />
           <Pressable style={[styles.modalCard, styles.modalCardLarge]} onPress={() => Keyboard.dismiss()}>
             <View style={styles.modalHeaderRow}>
               <Text style={styles.modalTitle}>Logs CSV</Text>
@@ -519,13 +522,14 @@ const LogsTab: React.FC<LogsTabProps> = ({ logs, onOpen, countLogsBefore, clearL
               </TouchableOpacity>
             </View>
           </Pressable>
-        </Pressable>
+        </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
 
       <Modal visible={showClear} transparent animationType="fade" onRequestClose={() => setShowClear(false)}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.kavFill}>
-        <Pressable style={styles.modalOverlay} onPress={() => { Keyboard.dismiss(); setShowClear(false); }}>
+        <ScrollView style={styles.modalOverlay} contentContainerStyle={styles.modalScrollContent} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" showsVerticalScrollIndicator={false}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => { Keyboard.dismiss(); setShowClear(false); }} />
           <Pressable style={styles.modalCard} onPress={() => Keyboard.dismiss()}>
             <Text style={styles.modalTitle}>Clear Old Logs</Text>
             <Text style={styles.modalSub}>Delete log entries older than the chosen number of days.</Text>
@@ -561,7 +565,7 @@ const LogsTab: React.FC<LogsTabProps> = ({ logs, onOpen, countLogsBefore, clearL
               </TouchableOpacity>
             </View>
           </Pressable>
-        </Pressable>
+        </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
     </View>
@@ -659,7 +663,8 @@ const BackupTab: React.FC<BackupTabProps> = ({ exportBackup, importBackup }) => 
 
       <Modal visible={showImport} transparent animationType="slide" onRequestClose={() => setShowImport(false)}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.kavFill}>
-        <Pressable style={styles.modalOverlay} onPress={() => { Keyboard.dismiss(); setShowImport(false); }}>
+        <ScrollView style={styles.modalOverlay} contentContainerStyle={styles.modalScrollContent} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" showsVerticalScrollIndicator={false}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => { Keyboard.dismiss(); setShowImport(false); }} />
           <Pressable style={[styles.modalCard, styles.modalCardLarge]} onPress={() => Keyboard.dismiss()}>
             <View style={styles.modalHeaderRow}>
               <Text style={styles.modalTitle}>Import Backup</Text>
@@ -689,13 +694,14 @@ const BackupTab: React.FC<BackupTabProps> = ({ exportBackup, importBackup }) => 
               </TouchableOpacity>
             </View>
           </Pressable>
-        </Pressable>
+        </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
 
       <Modal visible={showExport} transparent animationType="slide" onRequestClose={() => setShowExport(false)}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.kavFill}>
-        <Pressable style={styles.modalOverlay} onPress={() => { Keyboard.dismiss(); setShowExport(false); }}>
+        <ScrollView style={styles.modalOverlay} contentContainerStyle={styles.modalScrollContent} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" showsVerticalScrollIndicator={false}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => { Keyboard.dismiss(); setShowExport(false); }} />
           <Pressable style={[styles.modalCard, styles.modalCardLarge]} onPress={() => Keyboard.dismiss()}>
             <View style={styles.modalHeaderRow}>
               <Text style={styles.modalTitle}>Backup JSON</Text>
@@ -719,7 +725,7 @@ const BackupTab: React.FC<BackupTabProps> = ({ exportBackup, importBackup }) => 
               </TouchableOpacity>
             </View>
           </Pressable>
-        </Pressable>
+        </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
     </ScrollView>
@@ -834,14 +840,15 @@ const styles = StyleSheet.create({
 
   // Modals
   kavFill: { flex: 1 },
-  modalOverlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'center', alignItems: 'center', padding: 24 },
+  modalOverlay: { flex: 1, backgroundColor: Colors.overlay },
+  modalScrollContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
   modalCard: { backgroundColor: Colors.surfaceElevated, borderRadius: 18, padding: 20, width: '100%', borderWidth: 1, borderColor: Colors.border, gap: 10 },
-  modalCardLarge: { maxHeight: '85%' },
+  modalCardLarge: {},
   modalHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   modalTitle: { fontSize: 18, fontWeight: '800', color: Colors.text },
   modalSub: { fontSize: 13, color: Colors.textSecondary, lineHeight: 19 },
   modalInput: { backgroundColor: Colors.surface, borderRadius: 10, borderWidth: 1, borderColor: Colors.border, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: Colors.text },
-  jsonInput: { backgroundColor: Colors.surface, borderRadius: 10, borderWidth: 1, borderColor: Colors.border, padding: 12, fontSize: 12, color: Colors.text, minHeight: 200, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' },
+  jsonInput: { backgroundColor: Colors.surface, borderRadius: 10, borderWidth: 1, borderColor: Colors.border, padding: 12, fontSize: 12, color: Colors.text, minHeight: 200, maxHeight: 320, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' },
   checkRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 4 },
   checkBox: { width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: Colors.border, alignItems: 'center', justifyContent: 'center' },
   checkBoxOn: { backgroundColor: Colors.warning + '22', borderColor: Colors.warning },
