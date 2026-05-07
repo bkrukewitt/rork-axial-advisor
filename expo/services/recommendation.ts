@@ -1,4 +1,7 @@
-import { AdvisorFormState, AutomationMode, RecommendationResult, SettingPreset, AUTOMATION_DESCRIPTIONS } from '@/types';
+import {
+  AdvisorFormState, AutomationMode, RecommendationResult, SettingPreset,
+  AUTOMATION_DESCRIPTIONS, yieldCategoryFor,
+} from '@/types';
 
 function buildResult(preset: SettingPreset, form: AdvisorFormState): RecommendationResult {
   let notes = preset.notes;
@@ -6,10 +9,11 @@ function buildResult(preset: SettingPreset, form: AdvisorFormState): Recommendat
     ? 'Food-grade mode active. Prioritize kernel integrity. Inspect sample every 10–15 minutes and document settings for contract compliance.'
     : undefined;
 
-  // Yield adjustments
-  if (form.yieldEstimate === '> 250 bu/ac') {
+  // Yield adjustments (crop-aware via category)
+  const yieldCat = yieldCategoryFor(form.crop, form.yieldEstimate);
+  if (yieldCat === 'high') {
     notes += ' High yield field — reduce ground speed 10–15% to prevent overloading cleaning shoe.';
-  } else if (form.yieldEstimate === '< 150 bu/ac') {
+  } else if (yieldCat === 'low') {
     notes += ' Light yield — you may be able to increase ground speed to improve efficiency.';
   }
 
@@ -23,6 +27,10 @@ function buildResult(preset: SettingPreset, form: AdvisorFormState): Recommendat
     notes += ` ${form.combineModel} (260-series): Utilize variable geometry concave (VGC) for added threshing control.`;
   }
 
+  const customNotes = preset.customNotes ?? [];
+  const publicCustomNotes = customNotes.filter(n => n.isPublic);
+  const privateCustomNotes = customNotes.filter(n => !n.isPublic);
+
   return {
     concave: preset.concave,
     rotor: preset.rotor,
@@ -33,6 +41,8 @@ function buildResult(preset: SettingPreset, form: AdvisorFormState): Recommendat
     automationDescription: AUTOMATION_DESCRIPTIONS[preset.automationMode],
     notes,
     foodGradeNotes,
+    publicCustomNotes: publicCustomNotes.length > 0 ? publicCustomNotes : undefined,
+    privateCustomNotes: privateCustomNotes.length > 0 ? privateCustomNotes : undefined,
   };
 }
 

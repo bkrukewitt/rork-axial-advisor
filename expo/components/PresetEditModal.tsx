@@ -13,9 +13,11 @@ import {
 } from 'react-native';
 import { X, ChevronRight, RotateCcw } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
-import { SettingPreset, AutomationMode, CropType } from '@/types';
+import { SettingPreset, AutomationMode, CropType, AdminNote } from '@/types';
 import { PickerModal } from '@/components/PickerModal';
 import { DEFAULT_PRESETS } from '@/mocks/presets';
+import { CustomNotesEditor } from '@/components/CustomNotesEditor';
+import { useApp } from '@/store/AppContext';
 
 const AUTO_MODES: AutomationMode[] = ['Quality Priority', 'Throughput Priority', 'Balanced'];
 
@@ -81,6 +83,7 @@ export const PresetEditModal: React.FC<PresetEditModalProps> = ({
   onSave,
   onClose,
 }) => {
+  const { currentAdmin } = useApp();
   const [local, setLocal] = useState<SettingPreset | null>(null);
   const [autoPickerOpen, setAutoPickerOpen] = useState(false);
 
@@ -242,6 +245,15 @@ export const PresetEditModal: React.FC<PresetEditModalProps> = ({
                   multiline
                   testId="edit-notes"
                 />
+                <View style={styles.divider} />
+
+                <View style={styles.notesBlock}>
+                  <CustomNotesEditor
+                    notes={local?.customNotes ?? []}
+                    authorName={currentAdmin?.name}
+                    onChange={(next: AdminNote[]) => update('customNotes', next)}
+                  />
+                </View>
 
                 <View style={styles.actions}>
                   <TouchableOpacity style={styles.cancelBtn} onPress={handleClose} testID="edit-cancel">
@@ -460,5 +472,8 @@ const styles = StyleSheet.create({
   },
   bottomPad: {
     height: 32,
+  },
+  notesBlock: {
+    paddingTop: 12,
   },
 });

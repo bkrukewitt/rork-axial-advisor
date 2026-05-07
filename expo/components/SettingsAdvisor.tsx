@@ -28,7 +28,8 @@ import {
   HEADER_TYPES,
   CROP_TYPES,
   MOISTURE_LEVELS,
-  YIELD_ESTIMATES,
+  YIELD_RANGES_BY_CROP,
+  defaultYieldFor,
   RecommendationResult,
   SavedSetup,
 } from '@/types';
@@ -41,7 +42,7 @@ const DEFAULT_FORM: AdvisorFormState = {
   headerType: 'Corn Head',
   crop: 'Corn',
   moisture: '13\u201316%',
-  yieldEstimate: '150\u2013200 bu/ac',
+  yieldEstimate: defaultYieldFor('Corn'),
   isFoodGrade: false,
 };
 
@@ -229,6 +230,10 @@ export const SettingsAdvisor: React.FC = () => {
           const crop = val as CropType;
           const update: Partial<AdvisorFormState> = { crop };
           if (crop !== 'Corn') update.isFoodGrade = false;
+          // Reset yield estimate to a realistic default for the new crop
+          if (!YIELD_RANGES_BY_CROP[crop].includes(form.yieldEstimate)) {
+            update.yieldEstimate = defaultYieldFor(crop);
+          }
           updateForm(update);
         }}
         onClose={() => setActivePicker(null)}
@@ -243,8 +248,8 @@ export const SettingsAdvisor: React.FC = () => {
       />
       <PickerModal
         visible={activePicker === 'yieldEstimate'}
-        title="Yield Estimate"
-        options={YIELD_ESTIMATES}
+        title={`Yield Estimate — ${form.crop}`}
+        options={YIELD_RANGES_BY_CROP[form.crop]}
         value={form.yieldEstimate}
         onSelect={val => updateForm({ yieldEstimate: val as YieldEstimate })}
         onClose={() => setActivePicker(null)}

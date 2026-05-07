@@ -154,6 +154,14 @@ const PresetCard: React.FC<PresetCardProps> = React.memo(({ preset, defaultPrese
         onRevert={() => defaultPreset && onUpdate(preset.id, 'notes', defaultPreset.notes)}
         multiline
       />
+      <View style={styles.cardDivider} />
+      <View style={styles.customNotesWrap}>
+        <CustomNotesEditor
+          notes={preset.customNotes ?? []}
+          authorName={authorName}
+          onChange={(next: AdminNote[]) => onUpdate(preset.id, 'customNotes', next)}
+        />
+      </View>
     </View>
   );
 });

@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Shield, Zap, BarChart2, Save, Wheat } from 'lucide-react-native';
+import { Shield, Zap, BarChart2, Save, Wheat, Eye, Lock } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { RecommendationResult, AutomationMode } from '@/types';
+import { useApp } from '@/store/AppContext';
 
 interface SettingRowProps {
   label: string;
@@ -46,8 +47,11 @@ interface ResultsBlockProps {
 }
 
 export const ResultsBlock: React.FC<ResultsBlockProps> = ({ result, onSave }) => {
+  const { currentAdmin } = useApp();
   const autoConfig = AUTOMATION_CONFIG[result.automationMode];
   const AutoIcon = autoConfig.icon;
+  const publicNotes = result.publicCustomNotes ?? [];
+  const privateNotes = currentAdmin ? (result.privateCustomNotes ?? []) : [];
 
   return (
     <View style={styles.container}>
@@ -80,6 +84,38 @@ export const ResultsBlock: React.FC<ResultsBlockProps> = ({ result, onSave }) =>
       <View style={styles.notesCard}>
         <Text style={styles.notesText}>{result.notes}</Text>
       </View>
+
+      {publicNotes.length > 0 && (
+        <>
+          <Text style={styles.sectionTitle}>ADMIN NOTES</Text>
+          {publicNotes.map(n => (
+            <View key={n.id} style={[styles.notesCard, styles.publicNoteCard]}>
+              <View style={styles.noteHeader}>
+                <Eye size={13} color={Colors.success} />
+                <Text style={styles.publicNoteLabel}>NOTE FROM ADMIN</Text>
+                {n.authorName ? <Text style={styles.noteAuthor}>· {n.authorName}</Text> : null}
+              </View>
+              <Text style={styles.notesText}>{n.text}</Text>
+            </View>
+          ))}
+        </>
+      )}
+
+      {privateNotes.length > 0 && (
+        <>
+          <Text style={styles.sectionTitle}>PRIVATE ADMIN NOTES</Text>
+          {privateNotes.map(n => (
+            <View key={n.id} style={[styles.notesCard, styles.privateNoteCard]}>
+              <View style={styles.noteHeader}>
+                <Lock size={13} color={Colors.warning} />
+                <Text style={styles.privateNoteLabel}>ADMIN-ONLY</Text>
+                {n.authorName ? <Text style={styles.noteAuthor}>· {n.authorName}</Text> : null}
+              </View>
+              <Text style={styles.notesText}>{n.text}</Text>
+            </View>
+          ))}
+        </>
+      )}
 
       {result.foodGradeNotes && (
         <>
@@ -213,5 +249,38 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: Colors.text,
+  },
+  publicNoteCard: {
+    borderColor: Colors.success + '50',
+    marginBottom: 8,
+  },
+  privateNoteCard: {
+    borderColor: Colors.warning + '60',
+    backgroundColor: Colors.warning + '08',
+    marginBottom: 8,
+  },
+  noteHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
+  },
+  publicNoteLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: Colors.success,
+    letterSpacing: 0.5,
+  },
+  privateNoteLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: Colors.warning,
+    letterSpacing: 0.5,
+  },
+  noteAuthor: {
+    fontSize: 11,
+    color: Colors.textTertiary,
+    fontStyle: 'italic',
+    flexShrink: 1,
   },
 });
