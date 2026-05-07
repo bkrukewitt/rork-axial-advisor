@@ -19,7 +19,7 @@ import { useRouter } from 'expo-router';
 import {
   ChevronLeft, Users, FileText, Database, HardDrive,
   UserPlus, Trash2, Shield, ChevronRight,
-  Download, Upload, Filter, X, Eraser,
+  Download, Upload, Filter, X, Eraser, Pencil, FileDown,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '@/constants/colors';
@@ -59,6 +59,22 @@ const SECTION_LABEL: Record<AuditSection, string> = {
   admin: 'Admin',
   system: 'System',
 };
+
+function csvEscape(value: unknown): string {
+  const s = value === null || value === undefined ? '' : String(value);
+  if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+
+function logsToCsv(logs: AuditLogEntry[]): string {
+  const headers = ['timestamp', 'admin', 'section', 'action', 'entity', 'field', 'old_value', 'new_value', 'summary'];
+  const rows = logs.map(l => [
+    l.ts, l.adminName, l.section, l.action,
+    l.entityLabel ?? '', l.field ?? '',
+    l.oldValue ?? '', l.newValue ?? '', l.summary,
+  ].map(csvEscape).join(','));
+  return [headers.join(','), ...rows].join('\n');
+}
 
 function formatRelative(iso: string): string {
   const ts = new Date(iso).getTime();
@@ -194,6 +210,38 @@ const AdminsTab: React.FC<AdminsTabProps> = ({ admins, currentId, onAdd, onDelet
     }
   };
 
+  const [editTarget, setEditTarget] = useState<AdminUser | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editPass, setEditPass] = useState('');
+  const [editError, setEditError] = useState('');
+
+  const openEdit = (admin: AdminUser) => {
+    setEditTarget(admin);
+    setEditName(admin.name);
+    setEditPass('');
+    setEditError('');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editTarget) return;
+    const trimmedName = editName.trim();
+    if (!trimmedName) { setEditError('Name cannot be empty.'); return; }
+    const updates: Partial<Pick<AdminUser, 'name' | 'passcode'>> = {};
+    if (trimmedName !== editTarget.name) updates.name = trimmedName;
+    if (editPass.trim()) {
+      if (admins.some(a => a.id !== editTarget.id && a.passcode === editPass)) {
+        setEditError('That passcode is already in use.'); return;
+      }
+      updates.passcode = editPass;
+    }
+    if (Object.keys(updates).length === 0) {
+      setEditTarget(null); return;
+    }
+    await onUpdate(editTarget.id, updates);
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setEditTarget(null);
+  };
+
   const handleDelete = (admin: AdminUser) => {
     if (admin.id === currentId) {
       Alert.alert('Cannot Delete', 'You cannot delete the admin you are currently signed in as.');
@@ -245,6 +293,9 @@ const AdminsTab: React.FC<AdminsTabProps> = ({ admins, currentId, onAdd, onDelet
             <Text style={styles.adminMeta}>Passcode: ••••• · Created {new Date(a.createdAt).toLocaleDateString()}</Text>
           </View>
           <View style={styles.adminActions}>
+            <TouchableOpacity onPress={() => openEdit(a)} style={styles.iconBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} testID={`edit-admin-${a.id}`}>
+              <Pencil size={15} color={Colors.info} />
+            </TouchableOpacity>
             {a.id !== currentId && (
               <TouchableOpacity onPress={() => handlePromote(a)} style={styles.iconBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                 <Shield size={16} color={a.role === 'super' ? Colors.warning : Colors.textTertiary} />
@@ -260,6 +311,26 @@ const AdminsTab: React.FC<AdminsTabProps> = ({ admins, currentId, onAdd, onDelet
         <UserPlus size={18} color={Colors.red} />
         <Text style={styles.addAdminBtnText}>Add Admin</Text>
       </TouchableOpacity>
+
+      <Modal visible={!!editTarget} transparent animationType="fade" onRequestClose={() => setEditTarget(null)}>
+        <Pressable style={styles.modalOverlay} onPress={() => setEditTarget(null)}>
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <Text style={styles.modalTitle}>Edit Admin</Text>
+            <Text style={styles.modalSub}>Rename or set a new passcode. Leave passcode blank to keep the current one.</Text>
+            <TextInput style={styles.modalInput} placeholder="Name" placeholderTextColor={Colors.textTertiary} value={editName} onChangeText={setEditName} testID="edit-admin-name" />
+            <TextInput style={styles.modalInput} placeholder="New passcode (optional)" placeholderTextColor={Colors.textTertiary} value={editPass} onChangeText={setEditPass} secureTextEntry testID="edit-admin-passcode" />
+            {!!editError && <Text style={styles.errorText}>{editError}</Text>}
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.modalCancel} onPress={() => setEditTarget(null)}>
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalConfirm} onPress={handleSaveEdit} testID="confirm-edit-admin">
+                <Text style={styles.modalConfirmText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       <Modal visible={showAdd} transparent animationType="fade" onRequestClose={() => setShowAdd(false)}>
         <Pressable style={styles.modalOverlay} onPress={() => setShowAdd(false)}>
@@ -322,6 +393,25 @@ const LogsTab: React.FC<LogsTabProps> = ({ logs, onOpen, countLogsBefore, clearL
   }, [clearDays]);
   const willClear = countLogsBefore(cutoffIso);
 
+  const [showCsv, setShowCsv] = useState(false);
+  const [csvText, setCsvText] = useState('');
+
+  const handleCsvExport = async () => {
+    if (filtered.length === 0) {
+      Alert.alert('No Logs', 'There are no log entries to export.'); return;
+    }
+    const csv = logsToCsv(filtered);
+    setCsvText(csv);
+    void Haptics.selectionAsync();
+    if (Platform.OS === 'web') { setShowCsv(true); return; }
+    try {
+      await Share.share({ message: csv, title: `Audit Logs (${filtered.length})` });
+    } catch (e) {
+      console.warn('[Logs] CSV share error:', e);
+      setShowCsv(true);
+    }
+  };
+
   const handleClear = async () => {
     const days = parseInt(clearDays, 10);
     if (isNaN(days) || days < 0) {
@@ -367,10 +457,16 @@ const LogsTab: React.FC<LogsTabProps> = ({ logs, onOpen, countLogsBefore, clearL
           <Filter size={13} color={Colors.textTertiary} />
           <Text style={styles.logsHeaderText}>{filtered.length} of {logs.length}</Text>
         </View>
-        <TouchableOpacity style={styles.clearBtn} onPress={() => setShowClear(true)} activeOpacity={0.8} testID="open-clear-logs">
-          <Eraser size={13} color={Colors.warning} />
-          <Text style={styles.clearBtnText}>Clear Old</Text>
-        </TouchableOpacity>
+        <View style={styles.logsHeaderActions}>
+          <TouchableOpacity style={styles.csvBtn} onPress={() => void handleCsvExport()} activeOpacity={0.8} testID="export-logs-csv">
+            <FileDown size={13} color={Colors.info} />
+            <Text style={styles.csvBtnText}>CSV</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.clearBtn} onPress={() => setShowClear(true)} activeOpacity={0.8} testID="open-clear-logs">
+            <Eraser size={13} color={Colors.warning} />
+            <Text style={styles.clearBtnText}>Clear Old</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {filtered.length === 0 ? (
@@ -387,6 +483,34 @@ const LogsTab: React.FC<LogsTabProps> = ({ logs, onOpen, countLogsBefore, clearL
           ItemSeparatorComponent={() => <View style={styles.logSep} />}
         />
       )}
+
+      <Modal visible={showCsv} transparent animationType="slide" onRequestClose={() => setShowCsv(false)}>
+        <Pressable style={styles.modalOverlay} onPress={() => setShowCsv(false)}>
+          <Pressable style={[styles.modalCard, styles.modalCardLarge]} onPress={() => {}}>
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.modalTitle}>Logs CSV</Text>
+              <TouchableOpacity onPress={() => setShowCsv(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <X size={20} color={Colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.modalSub}>{filtered.length} row{filtered.length === 1 ? '' : 's'}. Copy and save as a .csv file.</Text>
+            <TextInput
+              style={styles.jsonInput}
+              value={csvText}
+              multiline
+              textAlignVertical="top"
+              editable
+              selectTextOnFocus
+              testID="logs-csv-output"
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.modalConfirm} onPress={() => setShowCsv(false)}>
+                <Text style={styles.modalConfirmText}>Done</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       <Modal visible={showClear} transparent animationType="fade" onRequestClose={() => setShowClear(false)}>
         <Pressable style={styles.modalOverlay} onPress={() => setShowClear(false)}>
@@ -726,6 +850,9 @@ const styles = StyleSheet.create({
   logsHeaderText: { fontSize: 12, color: Colors.textTertiary, fontWeight: '600' },
   clearBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: Colors.warning + '18', borderRadius: 8, borderWidth: 1, borderColor: Colors.warning + '40' },
   clearBtnText: { fontSize: 12, fontWeight: '700', color: Colors.warning },
+  logsHeaderActions: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  csvBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: Colors.info + '18', borderRadius: 8, borderWidth: 1, borderColor: Colors.info + '40' },
+  csvBtnText: { fontSize: 12, fontWeight: '700', color: Colors.info },
   logList: { paddingHorizontal: 12, paddingBottom: 24 },
   logSep: { height: 6 },
   logRow: { flexDirection: 'row', backgroundColor: Colors.surfaceElevated, borderRadius: 12, borderWidth: 1, borderColor: Colors.border, overflow: 'hidden', alignItems: 'center', paddingRight: 10 },
