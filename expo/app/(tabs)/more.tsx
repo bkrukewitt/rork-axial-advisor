@@ -30,15 +30,27 @@ interface RowProps {
   label: string;
   value?: string;
   isLink?: boolean;
+  onPress?: () => void;
 }
 
-const Row: React.FC<RowProps> = ({ label, value, isLink }) => (
-  <TouchableOpacity style={styles.row} activeOpacity={isLink ? 0.7 : 1} disabled={!isLink}>
+const Row: React.FC<RowProps> = ({ label, value, isLink, onPress }) => (
+  <TouchableOpacity
+    style={styles.row}
+    activeOpacity={isLink ? 0.7 : 1}
+    disabled={!isLink}
+    onPress={onPress}
+  >
     <Text style={styles.rowLabel}>{label}</Text>
     {value && <Text style={styles.rowValue}>{value}</Text>}
     {isLink && <ExternalLink size={14} color={Colors.textTertiary} />}
   </TouchableOpacity>
 );
+
+const openUrl = (url: string) => {
+  Linking.openURL(url).catch((err) => {
+    console.log('[More] Failed to open URL', url, err);
+  });
+};
 
 export default function MoreScreen() {
   return (
@@ -63,11 +75,23 @@ export default function MoreScreen() {
         </Section>
 
         <Section title="Resources">
-          <Row label="Case IH Website" isLink />
+          <Row
+            label="Case IH Website"
+            isLink
+            onPress={() => openUrl('https://www.caseih.com/')}
+          />
           <View style={styles.divider} />
-          <Row label="Operator Manuals" isLink />
+          <Row
+            label="Operator Manuals"
+            isLink
+            onPress={() => openUrl('https://www.caseih.com/en-us/unitedstates/service-support/operators-manuals')}
+          />
           <View style={styles.divider} />
-          <Row label="Dealer Locator" isLink />
+          <Row
+            label="Dealer Locator"
+            isLink
+            onPress={() => openUrl('https://www.caseih.com/en-us/unitedstates/dealer-locator')}
+          />
         </Section>
 
         <Section title="Disclaimer">
