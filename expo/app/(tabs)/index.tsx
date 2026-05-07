@@ -4,6 +4,9 @@ import {
   Text,
   Modal,
   TextInput,
+  KeyboardAvoidingView,
+  Keyboard,
+  Platform,
   TouchableOpacity,
   StyleSheet,
   Pressable,
@@ -92,8 +95,9 @@ export default function HomeScreen() {
       </View>
 
       <Modal visible={showPasscode} transparent animationType="fade" onRequestClose={closePasscode}>
-        <Pressable style={styles.overlay} onPress={closePasscode}>
-          <Pressable style={styles.dialog} onPress={() => {}}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.kavFill}>
+        <Pressable style={styles.overlay} onPress={() => { Keyboard.dismiss(); closePasscode(); }}>
+          <Pressable style={styles.dialog} onPress={() => Keyboard.dismiss()}>
             <View style={styles.dialogBadge}>
               <Text style={styles.dialogBadgeText}>{isSettingPasscode ? 'SUPER ADMIN' : 'ADMIN'}</Text>
             </View>
@@ -149,6 +153,7 @@ export default function HomeScreen() {
             </View>
           </Pressable>
         </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );
@@ -159,6 +164,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   segmentWrap: { paddingHorizontal: 16, marginBottom: 8 },
   panelContainer: { flex: 1 },
+  kavFill: { flex: 1 },
   overlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'center', alignItems: 'center', padding: 24 },
   dialog: { backgroundColor: Colors.surfaceElevated, borderRadius: 20, padding: 24, width: '100%', borderWidth: 1, borderColor: Colors.border },
   dialogBadge: { alignSelf: 'flex-start', backgroundColor: Colors.redMuted, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, marginBottom: 12, borderWidth: 1, borderColor: Colors.redDim },

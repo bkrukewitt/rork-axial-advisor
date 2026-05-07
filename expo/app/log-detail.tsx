@@ -7,6 +7,8 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Trash2, Save } from 'lucide-react-native';
@@ -97,7 +99,8 @@ export default function LogDetailScreen() {
           ),
         }}
       />
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.kavFill} keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
         <View style={styles.topInfo}>
           <Text style={styles.dateText}>{formatDate(setup.date)}</Text>
           <View style={styles.topMeta}>
@@ -175,11 +178,13 @@ export default function LogDetailScreen() {
         </TouchableOpacity>
         <View style={styles.bottomPad} />
       </ScrollView>
+      </KeyboardAvoidingView>
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  kavFill: { flex: 1 },
   scroll: { flex: 1, backgroundColor: Colors.background },
   content: { padding: 16 },
   topInfo: { marginBottom: 20, gap: 8 },
@@ -205,7 +210,7 @@ const styles = StyleSheet.create({
   saveBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Colors.red, borderRadius: 14, paddingVertical: 16, marginTop: 20 },
   saveBtnDisabled: { opacity: 0.6 },
   saveBtnText: { fontSize: 16, fontWeight: '700', color: Colors.text },
-  bottomPad: { height: 40 },
+  bottomPad: { height: 120 },
   notFound: { flex: 1, backgroundColor: Colors.background, alignItems: 'center', justifyContent: 'center', gap: 16 },
   notFoundText: { fontSize: 18, color: Colors.textSecondary },
   backBtn: { paddingHorizontal: 24, paddingVertical: 12, backgroundColor: Colors.red, borderRadius: 12 },

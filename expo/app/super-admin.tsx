@@ -13,6 +13,8 @@ import {
   Modal,
   Pressable,
   FlatList,
+  KeyboardAvoidingView,
+  Keyboard,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -316,8 +318,9 @@ const AdminsTab: React.FC<AdminsTabProps> = ({ admins, currentId, onAdd, onDelet
       </TouchableOpacity>
 
       <Modal visible={!!editTarget} transparent animationType="fade" onRequestClose={() => setEditTarget(null)}>
-        <Pressable style={styles.modalOverlay} onPress={() => setEditTarget(null)}>
-          <Pressable style={styles.modalCard} onPress={() => {}}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.kavFill}>
+        <Pressable style={styles.modalOverlay} onPress={() => { Keyboard.dismiss(); setEditTarget(null); }}>
+          <Pressable style={styles.modalCard} onPress={() => Keyboard.dismiss()}>
             <Text style={styles.modalTitle}>Edit Admin</Text>
             <Text style={styles.modalSub}>Rename or set a new passcode. Leave passcode blank to keep the current one.</Text>
             <TextInput style={styles.modalInput} placeholder="Name" placeholderTextColor={Colors.textTertiary} value={editName} onChangeText={setEditName} testID="edit-admin-name" />
@@ -333,11 +336,13 @@ const AdminsTab: React.FC<AdminsTabProps> = ({ admins, currentId, onAdd, onDelet
             </View>
           </Pressable>
         </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
 
       <Modal visible={showAdd} transparent animationType="fade" onRequestClose={() => setShowAdd(false)}>
-        <Pressable style={styles.modalOverlay} onPress={() => setShowAdd(false)}>
-          <Pressable style={styles.modalCard} onPress={() => {}}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.kavFill}>
+        <Pressable style={styles.modalOverlay} onPress={() => { Keyboard.dismiss(); setShowAdd(false); }}>
+          <Pressable style={styles.modalCard} onPress={() => Keyboard.dismiss()}>
             <Text style={styles.modalTitle}>New Admin</Text>
             <TextInput style={styles.modalInput} placeholder="Name" placeholderTextColor={Colors.textTertiary} value={newName} onChangeText={setNewName} testID="new-admin-name" />
             <TextInput style={styles.modalInput} placeholder="Passcode" placeholderTextColor={Colors.textTertiary} value={newPass} onChangeText={setNewPass} secureTextEntry testID="new-admin-passcode" />
@@ -358,6 +363,7 @@ const AdminsTab: React.FC<AdminsTabProps> = ({ admins, currentId, onAdd, onDelet
             </View>
           </Pressable>
         </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
     </ScrollView>
   );
@@ -488,8 +494,9 @@ const LogsTab: React.FC<LogsTabProps> = ({ logs, onOpen, countLogsBefore, clearL
       )}
 
       <Modal visible={showCsv} transparent animationType="slide" onRequestClose={() => setShowCsv(false)}>
-        <Pressable style={styles.modalOverlay} onPress={() => setShowCsv(false)}>
-          <Pressable style={[styles.modalCard, styles.modalCardLarge]} onPress={() => {}}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.kavFill}>
+        <Pressable style={styles.modalOverlay} onPress={() => { Keyboard.dismiss(); setShowCsv(false); }}>
+          <Pressable style={[styles.modalCard, styles.modalCardLarge]} onPress={() => Keyboard.dismiss()}>
             <View style={styles.modalHeaderRow}>
               <Text style={styles.modalTitle}>Logs CSV</Text>
               <TouchableOpacity onPress={() => setShowCsv(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -513,11 +520,13 @@ const LogsTab: React.FC<LogsTabProps> = ({ logs, onOpen, countLogsBefore, clearL
             </View>
           </Pressable>
         </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
 
       <Modal visible={showClear} transparent animationType="fade" onRequestClose={() => setShowClear(false)}>
-        <Pressable style={styles.modalOverlay} onPress={() => setShowClear(false)}>
-          <Pressable style={styles.modalCard} onPress={() => {}}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.kavFill}>
+        <Pressable style={styles.modalOverlay} onPress={() => { Keyboard.dismiss(); setShowClear(false); }}>
+          <Pressable style={styles.modalCard} onPress={() => Keyboard.dismiss()}>
             <Text style={styles.modalTitle}>Clear Old Logs</Text>
             <Text style={styles.modalSub}>Delete log entries older than the chosen number of days.</Text>
             <View style={styles.daysRow}>
@@ -553,6 +562,7 @@ const LogsTab: React.FC<LogsTabProps> = ({ logs, onOpen, countLogsBefore, clearL
             </View>
           </Pressable>
         </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -648,8 +658,9 @@ const BackupTab: React.FC<BackupTabProps> = ({ exportBackup, importBackup }) => 
       </TouchableOpacity>
 
       <Modal visible={showImport} transparent animationType="slide" onRequestClose={() => setShowImport(false)}>
-        <Pressable style={styles.modalOverlay} onPress={() => setShowImport(false)}>
-          <Pressable style={[styles.modalCard, styles.modalCardLarge]} onPress={() => {}}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.kavFill}>
+        <Pressable style={styles.modalOverlay} onPress={() => { Keyboard.dismiss(); setShowImport(false); }}>
+          <Pressable style={[styles.modalCard, styles.modalCardLarge]} onPress={() => Keyboard.dismiss()}>
             <View style={styles.modalHeaderRow}>
               <Text style={styles.modalTitle}>Import Backup</Text>
               <TouchableOpacity onPress={() => setShowImport(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -679,11 +690,13 @@ const BackupTab: React.FC<BackupTabProps> = ({ exportBackup, importBackup }) => 
             </View>
           </Pressable>
         </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
 
       <Modal visible={showExport} transparent animationType="slide" onRequestClose={() => setShowExport(false)}>
-        <Pressable style={styles.modalOverlay} onPress={() => setShowExport(false)}>
-          <Pressable style={[styles.modalCard, styles.modalCardLarge]} onPress={() => {}}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.kavFill}>
+        <Pressable style={styles.modalOverlay} onPress={() => { Keyboard.dismiss(); setShowExport(false); }}>
+          <Pressable style={[styles.modalCard, styles.modalCardLarge]} onPress={() => Keyboard.dismiss()}>
             <View style={styles.modalHeaderRow}>
               <Text style={styles.modalTitle}>Backup JSON</Text>
               <TouchableOpacity onPress={() => setShowExport(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -707,6 +720,7 @@ const BackupTab: React.FC<BackupTabProps> = ({ exportBackup, importBackup }) => 
             </View>
           </Pressable>
         </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
     </ScrollView>
   );
@@ -819,6 +833,7 @@ const styles = StyleSheet.create({
   addAdminBtnText: { fontSize: 15, fontWeight: '700', color: Colors.red },
 
   // Modals
+  kavFill: { flex: 1 },
   modalOverlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'center', alignItems: 'center', padding: 24 },
   modalCard: { backgroundColor: Colors.surfaceElevated, borderRadius: 18, padding: 20, width: '100%', borderWidth: 1, borderColor: Colors.border, gap: 10 },
   modalCardLarge: { maxHeight: '85%' },
