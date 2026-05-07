@@ -14,7 +14,7 @@ import {
   Pressable,
   FlatList,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import {
   ChevronLeft, Users, FileText, Database, HardDrive,
@@ -101,6 +101,9 @@ export default function SuperAdminScreen() {
     if (tab === 'logs') void markLogsSeen();
   }, [tab, markLogsSeen]);
 
+  const insets = useSafeAreaInsets();
+  const topPad = Math.max(insets.top, Platform.OS === 'android' ? 24 : 12);
+
   if (!currentAdmin || currentAdmin.role !== 'super') {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
@@ -117,8 +120,8 @@ export default function SuperAdminScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <View style={styles.header}>
+    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+      <View style={[styles.header, { paddingTop: topPad }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} testID="super-back">
           <ChevronLeft size={20} color={Colors.text} />
           <Text style={styles.backText}>Back</Text>
