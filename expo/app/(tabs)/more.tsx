@@ -10,7 +10,68 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AlertTriangle, Info, ExternalLink, MessageCircle } from 'lucide-react-native';
 import { Linking } from 'react-native';
+import * as Localization from 'expo-localization';
 import { Colors } from '@/constants/colors';
+
+type RegionLinks = { home: string; manuals: string; dealer: string };
+
+const REGIONS: Record<string, RegionLinks> = {
+  US: {
+    home: 'https://www.caseih.com/en-us/unitedstates',
+    manuals: 'https://www.caseih.com/en-us/unitedstates/service-support/operators-manuals',
+    dealer: 'https://www.caseih.com/en-us/unitedstates/dealer-locator',
+  },
+  CA: {
+    home: 'https://www.caseih.com/en-ca/canada',
+    manuals: 'https://www.caseih.com/en-ca/canada/service-support/operators-manuals',
+    dealer: 'https://www.caseih.com/en-ca/canada/dealer-locator',
+  },
+  AU: {
+    home: 'https://www.caseih.com/apac/en-au',
+    manuals: 'https://www.caseih.com/apac/en-au/service-support/operators-manuals',
+    dealer: 'https://www.caseih.com/apac/en-au/dealer-locator',
+  },
+  NZ: {
+    home: 'https://www.caseih.com/apac/en-nz',
+    manuals: 'https://www.caseih.com/apac/en-nz/service-support/operators-manuals',
+    dealer: 'https://www.caseih.com/apac/en-nz/dealer-locator',
+  },
+  GB: {
+    home: 'https://www.caseih.com/emea/en-gb',
+    manuals: 'https://www.caseih.com/emea/en-gb/service-support/operators-manuals',
+    dealer: 'https://www.caseih.com/emea/en-gb/dealer-locator',
+  },
+  IE: {
+    home: 'https://www.caseih.com/emea/en-ie',
+    manuals: 'https://www.caseih.com/emea/en-ie/service-support/operators-manuals',
+    dealer: 'https://www.caseih.com/emea/en-ie/dealer-locator',
+  },
+  ZA: {
+    home: 'https://www.caseih.com/emea/en-za',
+    manuals: 'https://www.caseih.com/emea/en-za/service-support/operators-manuals',
+    dealer: 'https://www.caseih.com/emea/en-za/dealer-locator',
+  },
+};
+
+const GLOBAL_LINKS: RegionLinks = {
+  home: 'https://www.caseih.com/',
+  manuals: 'https://www.caseih.com/en-us/unitedstates/service-support/operators-manuals',
+  dealer: 'https://www.caseih.com/en-us/unitedstates/dealer-locator',
+};
+
+function resolveLinks(): { links: RegionLinks; regionLabel: string } {
+  try {
+    const locales = Localization.getLocales();
+    const region = locales?.[0]?.regionCode?.toUpperCase() ?? '';
+    if (region && REGIONS[region]) {
+      return { links: REGIONS[region], regionLabel: region };
+    }
+    return { links: GLOBAL_LINKS, regionLabel: region || 'Global' };
+  } catch (err) {
+    console.log('[More] Locale resolve failed', err);
+    return { links: GLOBAL_LINKS, regionLabel: 'Global' };
+  }
+}
 
 const APP_VERSION = '1.0.0';
 
@@ -53,6 +114,7 @@ const openUrl = (url: string) => {
 };
 
 export default function MoreScreen() {
+  const { links, regionLabel } = React.useMemo(() => resolveLinks(), []);
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -74,23 +136,23 @@ export default function MoreScreen() {
           <Row label="Models" value="7250 / 8250 / 9250 / 7260 / 8260 / 9260" />
         </Section>
 
-        <Section title="Resources">
+        <Section title={`Resources · ${regionLabel}`}>
           <Row
             label="Case IH Website"
             isLink
-            onPress={() => openUrl('https://www.caseih.com/')}
+            onPress={() => openUrl(links.home)}
           />
           <View style={styles.divider} />
           <Row
             label="Operator Manuals"
             isLink
-            onPress={() => openUrl('https://www.caseih.com/en-us/unitedstates/service-support/operators-manuals')}
+            onPress={() => openUrl(links.manuals)}
           />
           <View style={styles.divider} />
           <Row
             label="Dealer Locator"
             isLink
-            onPress={() => openUrl('https://www.caseih.com/en-us/unitedstates/dealer-locator')}
+            onPress={() => openUrl(links.dealer)}
           />
         </Section>
 
