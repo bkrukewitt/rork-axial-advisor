@@ -2,7 +2,7 @@
   "expo": {
     "name": "Axial Advisor",
     "slug": "axial-advisornew",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "rork-app",
@@ -15,14 +15,19 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "app.rork.axial-advisor"
+      "bundleIdentifier": "app.rork.axial-advisor",
+      "buildNumber": "5",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "app.rork.axialadvisor"
+      "package": "app.rork.axialadvisor",
+      "versionCode": 5
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
@@ -41,6 +46,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": "https://rork.com/"
+      },
+      "eas": {
+        "projectId": "2a91a9b8-cffc-409e-8110-9a4bd47aae64"
+      }
     }
   }
 }
