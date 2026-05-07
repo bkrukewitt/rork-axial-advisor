@@ -10,62 +10,68 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '@/constants/colors';
 import { AppHeader } from '@/components/AppHeader';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { SettingsAdvisor } from '@/components/SettingsAdvisor';
 import { ExpertChat } from '@/components/ExpertChat';
-
-const PASSCODE_KEY = 'admin_passcode';
+import { useApp } from '@/store/AppContext';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { adminUsers, signInWithPasscode, createInitialSuperAdmin } = useApp();
   const [segmentIndex, setSegmentIndex] = useState(0);
   const [showPasscode, setShowPasscode] = useState(false);
-  const [isSettingPasscode, setIsSettingPasscode] = useState(false);
   const [passcode, setPasscode] = useState('');
+  const [name, setName] = useState('');
   const [passcodeError, setPasscodeError] = useState('');
 
-  const handleAdminTrigger = useCallback(async () => {
+  const isSettingPasscode = adminUsers.length === 0;
+
+  const handleAdminTrigger = useCallback(() => {
     console.log('[Home] Admin trigger');
-    try {
-      const stored = await SecureStore.getItemAsync(PASSCODE_KEY);
-      setIsSettingPasscode(!stored);
-    } catch {
-      setIsSettingPasscode(true);
-    }
     setPasscode('');
+    setName('');
     setPasscodeError('');
     setShowPasscode(true);
   }, []);
 
   const handlePasscodeSubmit = useCallback(async () => {
     if (!passcode.trim()) return;
-    try {
-      const stored = await SecureStore.getItemAsync(PASSCODE_KEY);
-      if (!stored) {
-        await SecureStore.setItemAsync(PASSCODE_KEY, passcode);
-        setShowPasscode(false);
-        router.push('/admin');
-      } else if (passcode === stored) {
-        setShowPasscode(false);
-        router.push('/admin');
-      } else {
-        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        setPasscodeError('Incorrect passcode. Try again.');
-        setPasscode('');
+    if (isSettingPasscode) {
+      const trimmedName = name.trim();
+      if (!trimmedName) {
+        setPasscodeError('Please enter your name.');
+        return;
       }
-    } catch (e) {
-      console.warn('[Home] SecureStore error:', e);
-      setPasscodeError('An error occurred. Try again.');
+      try {
+        await createInitialSuperAdmin(trimmedName, passcode);
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setShowPasscode(false);
+        router.push('/admin');
+      } catch (e) {
+        console.warn('[Home] createInitialSuperAdmin error:', e);
+        setPasscodeError('Could not create super admin.');
+      }
+      return;
     }
-  }, [passcode, router]);
+    const found = signInWithPasscode(passcode);
+    if (found) {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setShowPasscode(false);
+      router.push('/admin');
+    } else {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setPasscodeError('Incorrect passcode. Try again.');
+      setPasscode('');
+    }
+  }, [passcode, name, isSettingPasscode, signInWithPasscode, createInitialSuperAdmin, router]);
 
   const closePasscode = useCallback(() => {
     setShowPasscode(false);
     setPasscode('');
+    setName('');
     setPasscodeError('');
   }, []);
 
@@ -89,16 +95,30 @@ export default function HomeScreen() {
         <Pressable style={styles.overlay} onPress={closePasscode}>
           <Pressable style={styles.dialog} onPress={() => {}}>
             <View style={styles.dialogBadge}>
-              <Text style={styles.dialogBadgeText}>ADMIN</Text>
+              <Text style={styles.dialogBadgeText}>{isSettingPasscode ? 'SUPER ADMIN' : 'ADMIN'}</Text>
             </View>
             <Text style={styles.dialogTitle}>
-              {isSettingPasscode ? 'Create Admin Passcode' : 'Admin Access'}
+              {isSettingPasscode ? 'Create Super Admin' : 'Admin Access'}
             </Text>
             <Text style={styles.dialogSub}>
               {isSettingPasscode
-                ? 'Set a passcode to protect admin settings.'
+                ? 'You are the first admin. Set your name and passcode — you will be able to add more admins later.'
                 : 'Enter your admin passcode to continue.'}
             </Text>
+
+            {isSettingPasscode && (
+              <TextInput
+                style={styles.textInput}
+                value={name}
+                onChangeText={v => { setName(v); setPasscodeError(''); }}
+                placeholder="Your name"
+                placeholderTextColor={Colors.textTertiary}
+                autoFocus
+                returnKeyType="next"
+                testID="admin-name-input"
+              />
+            )}
+
             <TextInput
               style={styles.passcodeInput}
               value={passcode}
@@ -106,7 +126,7 @@ export default function HomeScreen() {
               placeholder={isSettingPasscode ? 'Create passcode' : 'Enter passcode'}
               placeholderTextColor={Colors.textTertiary}
               secureTextEntry
-              autoFocus
+              autoFocus={!isSettingPasscode}
               returnKeyType="done"
               onSubmitEditing={handlePasscodeSubmit}
               testID="passcode-input"
@@ -123,7 +143,7 @@ export default function HomeScreen() {
                 testID="passcode-submit"
               >
                 <Text style={styles.confirmText}>
-                  {isSettingPasscode ? 'Set Passcode' : 'Unlock'}
+                  {isSettingPasscode ? 'Create Account' : 'Unlock'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -145,6 +165,7 @@ const styles = StyleSheet.create({
   dialogBadgeText: { fontSize: 10, fontWeight: '800', color: Colors.red, letterSpacing: 1.2 },
   dialogTitle: { fontSize: 20, fontWeight: '800', color: Colors.text, marginBottom: 6 },
   dialogSub: { fontSize: 14, color: Colors.textSecondary, marginBottom: 20, lineHeight: 20 },
+  textInput: { backgroundColor: Colors.surface, borderRadius: 12, borderWidth: 1, borderColor: Colors.border, paddingHorizontal: 16, paddingVertical: 14, fontSize: 16, color: Colors.text, marginBottom: 10 },
   passcodeInput: { backgroundColor: Colors.surface, borderRadius: 12, borderWidth: 1, borderColor: Colors.border, paddingHorizontal: 16, paddingVertical: 14, fontSize: 16, color: Colors.text, marginBottom: 10, letterSpacing: 3 },
   errorText: { fontSize: 13, color: Colors.redBright, marginBottom: 10 },
   dialogActions: { flexDirection: 'row', gap: 10, marginTop: 6 },

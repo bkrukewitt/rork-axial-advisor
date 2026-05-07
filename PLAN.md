@@ -1,27 +1,44 @@
-# Admin Panel: Compact Table View + Web Editor Guidance
+# Admin Logging System — Multi-Admin + Audit Trail
 
-Fix the core visibility pain point — agronomists need to see all presets at once, not scroll through individual cards. Also surface the Supabase web editor as the zero-code bulk editing path for the team.
+Build a full admin/audit system: multiple admin users (super-admin assigned), per-field change logging stored in Supabase, and a redesigned super-admin panel with tabbed pages.
 
-## Files to Change
+## Schema (Supabase)
 
-### `expo/components/PresetTableView.tsx` (new file)
-- Compact scrollable table showing ALL presets across ALL crops at once
-- Outer vertical ScrollView for rows, inner horizontal ScrollView for columns
-- Left column: Crop + Moisture label (color-coded by crop type)
-- Data columns: Concave | Rotor | Fan | Top Sieve | Bottom Sieve | Auto Mode
-- Alternating row backgrounds, group separators between crops
-- Compact font/tight padding to maximize data density on mobile
-- Each row tappable → fires `onEdit(preset)` callback
+```sql
+create table if not exists admin_users (
+  id text primary key,
+  name text not null,
+  passcode text not null,
+  role text not null default 'admin',
+  created_at timestamptz default now()
+);
 
-### `expo/components/PresetEditModal.tsx` (new file)
-- Bottom-sheet-style Modal for editing a single preset
-- Opened when tapping a row in table view
-- All fields: Concave, Rotor, Fan, Top Sieve, Bottom Sieve, Automation Mode, Notes
-- Uses existing FieldInput pattern from admin.tsx
-- Save and Cancel buttons — calls onUpdate and closes
+create table if not exists audit_logs (
+  id text primary key,
+  ts timestamptz not null default now(),
+  admin_id text,
+  admin_name text not null,
+  section text not null,
+  entity_id text,
+  entity_label text,
+  action text not null,
+  field text,
+  old_value text,
+  new_value text,
+  snapshot jsonb,
+  summary text not null
+);
+create index if not exists audit_logs_ts_idx on audit_logs (ts desc);
+```
 
-### `expo/app/admin.tsx` (modify)
-- Add Card / Table icon toggle in the Settings tab filter area
-- Table mode: renders PresetTableView with all presets, all crops — no crop filter needed, full dataset visible at a glance
-- Card mode: keeps existing per-crop card behavior unchanged
-- Add a subtle info banner at the top of the admin panel: "Bulk editing? Visit app.supabase.com for a full spreadsheet view" with an ExternalLink icon — the zero-code path that already works today with no additional code
+## Files
+
+- [x] `expo/types/index.ts` — AdminUser, AuditLogEntry types
+- [x] `expo/services/supabase.ts` — admin_users + audit_logs CRUD
+- [x] `expo/services/audit.ts` — diff helpers (presets/tips/issues)
+- [x] `expo/store/AppContext.tsx` — admin auth, currentAdmin, log emission, clear/restore
+- [x] `expo/app/(tabs)/index.tsx` — passcode flow → admin user resolve / first-time super admin setup
+- [x] `expo/app/admin.tsx` — show signed-in admin, super-admin link, log on save
+- [x] `expo/app/super-admin.tsx` — tabs: Settings (admins) | Logs (filter+list+red-dot) | Backup (export/import) | Debug
+- [x] `expo/app/log-entry.tsx` — log detail with revert/restore
+- [x] `expo/app/_layout.tsx` — register new screens

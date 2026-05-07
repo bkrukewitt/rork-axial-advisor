@@ -88,6 +88,46 @@ export const CROP_TYPES: CropType[] = ['Corn', 'Soybeans', 'Wheat', 'Canola', 'O
 export const MOISTURE_LEVELS: MoistureLevel[] = ['< 13%', '13\u201316%', '16\u201320%', '20\u201325%', '> 25%'];
 export const YIELD_ESTIMATES: YieldEstimate[] = ['< 150 bu/ac', '150\u2013200 bu/ac', '200\u2013250 bu/ac', '> 250 bu/ac'];
 
+export type AdminRole = 'super' | 'admin';
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  passcode: string;
+  role: AdminRole;
+  createdAt: string;
+}
+
+export type AuditSection = 'preset' | 'tip' | 'issue' | 'admin' | 'system';
+export type AuditAction =
+  | 'update'
+  | 'create'
+  | 'delete'
+  | 'reset'
+  | 'revert'
+  | 'restore'
+  | 'import'
+  | 'export'
+  | 'clear-logs'
+  | 'sign-in'
+  | 'sign-out';
+
+export interface AuditLogEntry {
+  id: string;
+  ts: string;
+  adminId: string | null;
+  adminName: string;
+  section: AuditSection;
+  entityId: string | null;
+  entityLabel: string | null;
+  action: AuditAction;
+  field: string | null;
+  oldValue: string | null;
+  newValue: string | null;
+  snapshot: unknown | null;
+  summary: string;
+}
+
 export const AUTOMATION_DESCRIPTIONS: Record<AutomationMode, string> = {
   'Quality Priority': 'Optimizes for sample cleanliness and kernel integrity. Best when market premiums depend on quality.',
   'Throughput Priority': 'Maximizes acres per hour. Best in ideal conditions with no quality concerns.',

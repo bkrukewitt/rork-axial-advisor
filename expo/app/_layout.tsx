@@ -36,6 +36,19 @@ function RootLayoutNav() {
           headerTitleStyle: { fontWeight: '700' },
         }}
       />
+      <Stack.Screen
+        name="super-admin"
+        options={{ presentation: 'fullScreenModal', headerShown: false }}
+      />
+      <Stack.Screen
+        name="log-entry"
+        options={{
+          title: 'Log Entry',
+          headerStyle: { backgroundColor: '#141416' },
+          headerTintColor: '#FFFFFF',
+          headerTitleStyle: { fontWeight: '700' },
+        }}
+      />
       <Stack.Screen name="+not-found" options={{ title: 'Not Found' }} />
     </Stack>
   );

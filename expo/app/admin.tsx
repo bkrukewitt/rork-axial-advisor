@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Plus, Trash2, ChevronRight, LayoutList, LayoutGrid, RotateCcw } from 'lucide-react-native';
+import { Plus, Trash2, ChevronRight, LayoutList, LayoutGrid, RotateCcw, Shield, LogOut } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/store/AppContext';
 import { SegmentedControl } from '@/components/SegmentedControl';
@@ -204,7 +204,7 @@ const IssueCard: React.FC<IssueCardProps> = React.memo(({ issue, onUpdate, onDel
 
 export default function AdminScreen() {
   const router = useRouter();
-  const { settingPresets, quickTips, quickIssues, savePresets, saveTips, saveIssues } = useApp();
+  const { settingPresets, quickTips, quickIssues, savePresets, saveTips, saveIssues, currentAdmin, signOut, unseenLogCount } = useApp();
 
   const [localPresets, setLocalPresets] = useState<SettingPreset[]>(() => [...settingPresets]);
   const [localTips, setLocalTips] = useState<QuickTip[]>(() => [...quickTips]);
@@ -284,14 +284,35 @@ export default function AdminScreen() {
 
   const editingPreset = editingAutoPresetId ? localPresets.find(p => p.id === editingAutoPresetId) : null;
 
+  const handleDone = useCallback(() => {
+    signOut();
+    router.back();
+  }, [signOut, router]);
+
+  const isSuper = currentAdmin?.role === 'super';
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.doneBtn} testID="admin-done">
+        <TouchableOpacity onPress={handleDone} style={styles.doneBtn} testID="admin-done">
+          <LogOut size={14} color={Colors.red} />
           <Text style={styles.doneBtnText}>Done</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Admin Panel</Text>
-        <View style={styles.headerSpacer} />
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>Admin Panel</Text>
+          {currentAdmin && (
+            <Text style={styles.headerSub}>Signed in as {currentAdmin.name}{isSuper ? ' · Super' : ''}</Text>
+          )}
+        </View>
+        {isSuper ? (
+          <TouchableOpacity onPress={() => router.push('/super-admin')} style={styles.superBtn} testID="open-super-admin">
+            <Shield size={14} color={Colors.text} />
+            <Text style={styles.superBtnText}>Super</Text>
+            {unseenLogCount > 0 && <View style={styles.dot} />}
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.headerSpacer} />
+        )}
       </View>
 
       <View style={styles.segmentWrap}>
@@ -460,10 +481,15 @@ export default function AdminScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  doneBtn: { paddingVertical: 4, paddingHorizontal: 2, minWidth: 60 },
-  doneBtnText: { fontSize: 17, fontWeight: '600', color: Colors.red },
+  doneBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 4, paddingHorizontal: 2, minWidth: 76 },
+  doneBtnText: { fontSize: 16, fontWeight: '600', color: Colors.red },
+  headerCenter: { flex: 1, alignItems: 'center' },
   headerTitle: { fontSize: 17, fontWeight: '700', color: Colors.text },
-  headerSpacer: { minWidth: 60 },
+  headerSub: { fontSize: 11, color: Colors.textTertiary, marginTop: 1 },
+  headerSpacer: { minWidth: 76 },
+  superBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: Colors.red, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 7, minWidth: 76, justifyContent: 'center', position: 'relative' },
+  superBtnText: { fontSize: 13, fontWeight: '700', color: Colors.text },
+  dot: { position: 'absolute', top: -3, right: -3, width: 10, height: 10, borderRadius: 5, backgroundColor: Colors.warning, borderWidth: 1.5, borderColor: Colors.surfaceElevated },
 
   segmentWrap: { paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: Colors.border },
 
