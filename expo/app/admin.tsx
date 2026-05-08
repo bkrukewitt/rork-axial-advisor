@@ -22,9 +22,10 @@ import { PresetTableView } from '@/components/PresetTableView';
 import { PresetEditModal } from '@/components/PresetEditModal';
 import {
   SettingPreset, QuickTip, QuickIssue,
-  CropType, AutomationMode, CROP_TYPES,
+  CropType, AutomationMode, CROP_TYPES, AdminNote,
 } from '@/types';
 import { DEFAULT_PRESETS } from '@/mocks/presets';
+import { CustomNotesEditor } from '@/components/CustomNotesEditor';
 
 const AUTO_MODES: AutomationMode[] = ['Quality Priority', 'Throughput Priority', 'Balanced'];
 
@@ -68,10 +69,11 @@ const FieldInput: React.FC<FieldInputProps> = ({ label, value, onChange, default
 interface PresetCardProps {
   preset: SettingPreset;
   defaultPreset: SettingPreset | undefined;
-  onUpdate: (id: string, field: keyof SettingPreset, value: string | boolean | AutomationMode) => void;
+  onUpdate: (id: string, field: keyof SettingPreset, value: string | boolean | AutomationMode | AdminNote[]) => void;
   onEditAuto: (id: string) => void;
+  authorName?: string;
 }
-const PresetCard: React.FC<PresetCardProps> = React.memo(({ preset, defaultPreset, onUpdate, onEditAuto }) => {
+const PresetCard: React.FC<PresetCardProps> = React.memo(({ preset, defaultPreset, onUpdate, onEditAuto, authorName }) => {
   const autoIsChanged = defaultPreset && preset.automationMode !== defaultPreset.automationMode;
   return (
     <View style={styles.presetCard}>
@@ -213,6 +215,7 @@ const IssueCard: React.FC<IssueCardProps> = React.memo(({ issue, onUpdate, onDel
 export default function AdminScreen() {
   const router = useRouter();
   const { settingPresets, quickTips, quickIssues, savePresets, saveTips, saveIssues, currentAdmin, signOut, unseenLogCount } = useApp();
+  const authorName = currentAdmin?.name;
 
   const [localPresets, setLocalPresets] = useState<SettingPreset[]>(() => [...settingPresets]);
   const [localTips, setLocalTips] = useState<QuickTip[]>(() => [...quickTips]);
@@ -234,7 +237,7 @@ export default function AdminScreen() {
     return !p.isFoodGrade;
   });
 
-  const updatePreset = useCallback((id: string, field: keyof SettingPreset, value: string | boolean | AutomationMode) => {
+  const updatePreset = useCallback((id: string, field: keyof SettingPreset, value: string | boolean | AutomationMode | AdminNote[]) => {
     setLocalPresets(prev => prev.map(p => p.id === id ? { ...p, [field]: value } as SettingPreset : p));
   }, []);
 
@@ -427,6 +430,7 @@ export default function AdminScreen() {
                   defaultPreset={DEFAULT_PRESETS.find(d => d.id === preset.id)}
                   onUpdate={updatePreset}
                   onEditAuto={setEditingAutoPresetId}
+                  authorName={authorName}
                 />
               ))}
               <TouchableOpacity style={[styles.saveBtn, isSaving && styles.saveBtnDisabled]} onPress={handleSavePresets} disabled={isSaving}>
@@ -575,4 +579,5 @@ const styles = StyleSheet.create({
   saveBtnDisabled: { opacity: 0.6 },
   saveBtnText: { fontSize: 16, fontWeight: '700', color: Colors.text },
   bottomPad: { height: 20 },
+  customNotesWrap: { paddingHorizontal: 14, paddingVertical: 10 },
 });
